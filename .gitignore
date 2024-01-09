@@ -1,0 +1,5 @@
+# sooooooooo chonky
+*.db
+# You'll have to get your own access token. Configuring individual user access tokens is a couple miles down the roadmap. 
+osu_access_token.py 
+*.pyc
