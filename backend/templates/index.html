@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Osu Oracle</title>
+    <meta name="description"
+        content="This is the Osu Oracle. It recommend beatmaps based on Nearest Neighbor algorithm. DM me on reddit if you would like to contribute.">
+
+    <meta name="EggTofu" content="https://www.reddit.com/user/EggTofu/">
+    <script src="static/script.js">
+    </script>
+
+    <style>
+        .table {
+            display: flex;
+        }
+
+        .column1 {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid black;
+        }
+
+        .column2 {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="table">
+        <div class="column1">
+            <h1> Scores</h1>
+            <input type="number" id="userID" placeholder="user id (ie. 28956125)">
+            <input type="button" id="submitUserID" value="Submit">
+
+            <div>
+                <table id="scoresTable">
+                    <thead>
+                        <tr>
+                            <th> Score ID </th>
+                            <th> Beatmap/ID </th>
+                            <th> Mods </th>
+                            <th> Rank/Acc </th>
+                            <th> Remove </th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoresTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <input type="number" id="scoreID" placeholder="score id (ie. 4470046750)">
+            <input type="button" id="submitScoreID" value="Submit">
+        </div>
+
+        <div class="column2">
+            <h1> Recommended Beatmaps</h1>
+            <br> Based on the scores to your left, we recommend the following beatmaps. </br>
+            <input type="button" id = "recommendBeatmaps" value = "Recommend Beatmaps">
+
+            <div>
+                <table id = "recommendedBeatmaps">
+                    <thead>
+                        <tr>
+                            <th> Beatmap ID </th>
+                            <th> Mods </th>
+                        </tr>
+                    </thead>
+                    <tbody id="recommendedBeatmapsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
