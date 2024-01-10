@@ -7,7 +7,7 @@ from ossapi import Ossapi
 import sqlite3
 
 sys.path.insert(0, "../")
-from classes import Score
+from data.classes import Score
 from osu_access_token import client_id, client_secret
 
 app = Flask(__name__)

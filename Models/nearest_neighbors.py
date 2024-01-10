@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, "../")
 from osu_access_token import client_id, client_secret
-from classes import Score
+from data.classes import Score
 
 
 def predict_beatmaps(user_id):
