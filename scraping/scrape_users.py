@@ -38,7 +38,7 @@ def scrape_users(ids):
     """
     global num_done
     global last_time
-    conn = sqlite3.connect("../data/osu2.db")  # Change to osu.db in the future
+    conn = sqlite3.connect("../data/osu.db")  # Change to osu.db in the future
     cursor = conn.cursor()
 
     for user_id in ids:
@@ -88,7 +88,7 @@ def scrape_users(ids):
     conn.close()
 
 
-for user_ids in partitioned_user_ids:s
+for user_ids in partitioned_user_ids:
     print(len(user_ids))
 
 with ThreadPoolExecutor(max_workers=num_partitions) as executor:
