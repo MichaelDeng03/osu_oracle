@@ -18,9 +18,10 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 word2vec_model = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
-NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
+NN = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model.wv.vectors
 )
+
 # word2vec_model_noHD = gensim.models.Word2Vec.load(
 #     "../Models/w2v_model_noHD/w2v_model_noHD"
 # )
@@ -28,7 +29,8 @@ NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
 #     word2vec_model_noHD.wv.vectors
 # )
 
-mod_enums = [
+
+mod_enums_list = [
     "None",  # 0
     "NoFail",  # 1
     "Easy",  # 2
@@ -62,6 +64,7 @@ mod_enums = [
     "ScoreV2",
     "Mirror",
 ]
+mod_enums = {mod: 2 ** (i - 1) for i, mod in enumerate(mod_enums_list)}
 
 NF = 1
 HD = 8  # Removed only for no HD
@@ -78,7 +81,7 @@ def mod_enum_to_names(mod_enum):
     mod_enum = bin(mod_enum)[2:] + "0"
     mod_enum = mod_enum[::-1]
     mod_enum = list(mod_enum)
-    mods = [mod_enums[i] for i in range(len(mod_enum)) if mod_enum[i] == "1"]
+    mods = [mod_enums_list[i] for i in range(len(mod_enum)) if mod_enum[i] == "1"]
     mods = ", ".join(mods)
 
     return mods
@@ -87,10 +90,8 @@ def mod_enum_to_names(mod_enum):
 def mod_names_to_enum(mod_names):
     mod_names = mod_names.split(", ")
     enum = 0
-    for i, mod_name in enumerate(mod_enums):
-        for mod in mod_names:
-            if mod_name == mod:
-                enum += 2**i
+    for mod_name in mod_names:
+        enum += mod_enums[mod_name]
 
     return enum
 
@@ -143,7 +144,7 @@ def get_beatmap_link(beatmap_id):
         beatmap = Beatmap(api.beatmap(beatmap_id))
         beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
         beatmapset_id = beatmap.beatmapset_id
-        
+
         lock.acquire()
         beatmap.insert(cursor)
         beatmapset.insert(cursor)
@@ -151,6 +152,29 @@ def get_beatmap_link(beatmap_id):
         lock.release()
     finally:
         return f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}"
+
+
+def get_beatmap_stars(beatmap_id):
+    try:
+        conn = sqlite3.connect("../data/osu.db")
+        cursor = conn.cursor()
+        query = (
+            f"SELECT difficulty_rating FROM beatmaps WHERE beatmap_id = {beatmap_id}"
+        )
+        stars = cursor.execute(query).fetchone()[0]
+    except Exception as e:
+        print(e)
+        beatmap = Beatmap(api.beatmap(beatmap_id))
+        beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
+
+        lock.acquire()
+        beatmap.insert(cursor)
+        beatmapset.insert(cursor)
+        conn.commit()
+        lock.release()
+        stars = beatmap.difficulty_rating
+    finally:
+        return stars
 
 
 @app.route("/get_user_scores/<int:user_id>")
@@ -203,15 +227,22 @@ def predict_beatmaps():
     for score in scores:
         bm_id, mod_enum = score.split("-")
         mod_enum = int(mod_enum)
-        mod_enum &= ~standard_removed_mods
+        # mod_enum &= ~standard_removed_mods
+        mod_enum &= ~noHD_removed_mods
 
         user_scores.append(score)
 
+    # word2vec_model = word2vec_model_noHD  # CHANGE LATER
+    # NN = NN_noHD  # CHANGE LATER
+
+    print(user_scores)
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
+    print(user_scores)
     user_scores = [word2vec_model.wv[score] for score in user_scores]
-    distances, indices = NN_std.kneighbors([np.mean(user_scores, axis=0)])
+
+    distances, indices = NN.kneighbors([np.mean(user_scores, axis=0)])
     beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
 
     rows = []
@@ -227,6 +258,7 @@ def predict_beatmaps():
                 "mods": mods,
                 "title": title,
                 "beatmap_link": get_beatmap_link(beatmap_id),
+                "stars": get_beatmap_stars(beatmap_id),
             }
         )
 

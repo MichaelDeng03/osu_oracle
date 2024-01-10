@@ -113,13 +113,15 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
         const beatmapIDCell = newRow.insertCell(0);
         const beatmapLink = document.createElement('a');
         const beatmapName = newRow.insertCell(1);
-        const mods = newRow.insertCell(2);
+        const stars = newRow.insertCell(2);
+        const mods = newRow.insertCell(3);
         
         // beatmapIDCell.textContent = beatmap['beatmap_id'];
         beatmapLink.href = beatmap['beatmap_link'];
         beatmapLink.textContent = beatmap['beatmap_id'];
         beatmapIDCell.appendChild(beatmapLink);
         beatmapName.textContent = beatmap['title'];
+        stars.textContent = beatmap['stars'];
         mods.textContent = beatmap['mods'];
     });
 
