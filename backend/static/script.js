@@ -16,8 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     getRecommendedBeatmaps.addEventListener('click', () => {
         fetchRecommendedBeatmaps();
     });
-
-
 });
 
 function fetchUserTopScores(userID) {
@@ -34,16 +32,21 @@ function addUserTopScores(userScores) {
     userScores.forEach(score => {
         const newRow = tableBody.insertRow(-1);
         const scoreIDCell = newRow.insertCell(0);
-        const beatmapCell = newRow.insertCell(1);
-        const modsCell = newRow.insertCell(2);
-        const rankCell = newRow.insertCell(3);
-        const removeCell = newRow.insertCell(4);
+        const beatmapNameCell = newRow.insertCell(1);
+        const beatmapCell = newRow.insertCell(2);
+        const modsCell = newRow.insertCell(3);
+        const rankCell = newRow.insertCell(4);
+        const removeCell = newRow.insertCell(5);
 
-        removeCell.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
-        scoreIDCell.textContent = score.id;
+        const scoreLink = document.createElement('a');
+        scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + score.score_id;
+        scoreLink.textContent = score.score_id;
+        scoreIDCell.appendChild(scoreLink);
+        beatmapNameCell.textContent = score.name;
         beatmapCell.textContent = score.beatmap_id;
         modsCell.textContent = score.mods;
         rankCell.textContent = score.rank;
+        removeCell.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
     });
 }
 
@@ -77,10 +80,12 @@ function removeRow(button) {
 
 function fetchRecommendedBeatmaps() {
     const userScores = document.getElementById('scoresTableBody').rows;
+    // const model = document.getElementById('model_select').value;
     const userScoresArray = [];
+
     for (let i = 0; i < userScores.length; i++) {
-        bm_id = userScores[i].cells[1].innerHTML;
-        mods = userScores[i].cells[2].innerHTML;
+        bm_id = userScores[i].cells[2].innerHTML;
+        mods = userScores[i].cells[3].innerHTML;
         userScoresArray.push(bm_id + '-' + mods);
     }
 
@@ -98,17 +103,24 @@ function fetchRecommendedBeatmaps() {
 
 function addRecommendedBeatmaps(recommendedBeatmaps) {
     const tableBody = document.getElementById('recommendedBeatmapsBody');
-    // Clear tableBOdy
+    // Clear tableBody
     tableBody.innerHTML = '';
 
     // For each recommended
     recommendedBeatmaps.forEach(beatmap => {
+        
         const newRow = tableBody.insertRow(-1);
         const beatmapIDCell = newRow.insertCell(0);
-        const mods = newRow.insertCell(1);
-
-        beatmapIDCell.textContent = beatmap[0];
-        mods.textContent = beatmap[1];
+        const beatmapLink = document.createElement('a');
+        const beatmapName = newRow.insertCell(1);
+        const mods = newRow.insertCell(2);
+        
+        // beatmapIDCell.textContent = beatmap['beatmap_id'];
+        beatmapLink.href = beatmap['beatmap_link'];
+        beatmapLink.textContent = beatmap['beatmap_id'];
+        beatmapIDCell.appendChild(beatmapLink);
+        beatmapName.textContent = beatmap['title'];
+        mods.textContent = beatmap['mods'];
     });
 
 

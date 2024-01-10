@@ -76,7 +76,7 @@ class Beatmap:
                 self.length_seconds,
                 self.author_id,
                 self.mode_int,
-                self.version
+                self.version,
             ),
         )
 
@@ -208,6 +208,7 @@ class Score:
     rank: str
     created_at: str  # ISO 8601
     mode: int
+    name: str
 
     def __init__(self, score: ossapi.models.Score):
         self.score_id = getattr(score, "id", None)
@@ -247,6 +248,8 @@ class Score:
         self.created_at = datetime.strftime(self.created_at, "%Y-%m-%d %H:%M:%S")
         self.mode = getattr(score, "mode_int", None)
 
+        self.name = None
+
     def insert(self, cursor):
         """Inserts into scores table"""
         sql = """
@@ -284,6 +287,7 @@ class Beatmapset:
     """
     Keeps select attributes from ossapi.models.Beatmapset
     """
+
     beatmapset_id: int
     language: str
     nsfw: bool

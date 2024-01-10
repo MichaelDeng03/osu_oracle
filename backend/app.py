@@ -5,19 +5,29 @@ import gensim
 import numpy as np
 from ossapi import Ossapi
 import sqlite3
+import threading
 
 sys.path.insert(0, "../")
-from data.classes import Score
+from data.classes import Score, Beatmap, Beatmapset
 from osu_access_token import client_id, client_secret
 
 app = Flask(__name__)
 api = Ossapi(client_id, client_secret)
-# conn = sqlite3.connect("../data/osu.db")
-
+conn = sqlite3.connect(
+    "../data/osu.db", check_same_thread=False
+)  # DANGER DANGER: need to lock acquire manually
+lock = threading.Lock()
 word2vec_model = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
-NN = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
+NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model.wv.vectors
 )
+# word2vec_model_noHD = gensim.models.Word2Vec.load(
+#     "../Models/w2v_model_noHD/w2v_model_noHD"
+# )
+# NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
+#     word2vec_model_noHD.wv.vectors
+# )
+
 mod_enums = [
     "None",  # 0
     "NoFail",  # 1
@@ -53,6 +63,16 @@ mod_enums = [
     "Mirror",
 ]
 
+NF = 1
+HD = 8  # Removed only for no HD
+SD = 32
+NC = 512
+SO = 4096
+PF = 16384
+SV2 = 536870912
+standard_removed_mods = NF | SD | NC | SO | PF | SV2
+noHD_removed_mods = NF | SD | NC | SO | PF | SV2 | HD
+
 
 def mod_enum_to_names(mod_enum):
     mod_enum = bin(mod_enum)[2:] + "0"
@@ -85,6 +105,54 @@ def home():
     return render_template("index.html")
 
 
+def get_beatmap_name(beatmap_id):
+    conn = sqlite3.connect("../data/osu.db")
+    cursor = conn.cursor()
+    try:
+        query = f"SELECT version, beatmapset_id FROM beatmaps WHERE beatmap_id = {beatmap_id}"
+        cursor.execute(query)
+        version, beatmapset_id = cursor.fetchone()
+        query = f"SELECT title FROM beatmapsets WHERE beatmapset_id = {beatmapset_id}"
+        title = cursor.execute(query).fetchone()[0]
+    except Exception as e:
+        print(e)
+        beatmap = Beatmap(api.beatmap(beatmap_id))
+        beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
+
+        lock.acquire()
+        beatmap.insert(cursor)
+        beatmapset.insert(cursor)
+        conn.commit()
+        lock.release()
+        title = beatmapset.title
+        version = beatmap.version
+
+    finally:
+        return f"{title} [{version}]"
+
+
+def get_beatmap_link(beatmap_id):
+    conn = sqlite3.connect("../data/osu.db")
+    cursor = conn.cursor()
+    try:
+        query = f"SELECT beatmapset_id FROM beatmaps WHERE beatmap_id = {beatmap_id}"
+        beatmapset_id = cursor.execute(query).fetchone()[0]
+        query = f"SELECT beatmapset_link FROM beatmapsets WHERE beatmapset_id = {beatmapset_id}"
+    except Exception as e:
+        print(e)
+        beatmap = Beatmap(api.beatmap(beatmap_id))
+        beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
+        beatmapset_id = beatmap.beatmapset_id
+        
+        lock.acquire()
+        beatmap.insert(cursor)
+        beatmapset.insert(cursor)
+        conn.commit()
+        lock.release()
+    finally:
+        return f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}"
+
+
 @app.route("/get_user_scores/<int:user_id>")
 def get_user_scores(user_id):
     try:
@@ -94,6 +162,7 @@ def get_user_scores(user_id):
             try:
                 score = Score(score)
                 scores.append(score)
+                score.name = get_beatmap_name(score.beatmap_id)
             except Exception as e:
                 print(f"Error creating score object: {e}")
                 continue
@@ -122,7 +191,6 @@ def predict_beatmaps():
     input: user_scores = list of bm_id-mods_enum
     returns: beatmaps = jsonified list of bm_ids-mods_enum
     """
-
     data = request.json
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
@@ -135,29 +203,34 @@ def predict_beatmaps():
     for score in scores:
         bm_id, mod_enum = score.split("-")
         mod_enum = int(mod_enum)
-        NC = 512
-        SD = 32
-        SO = 4096
-        PF = 16384
-        mod_enum &= ~NC
-        mod_enum &= ~SD
-        mod_enum &= ~SO
-        mod_enum &= ~PF
+        mod_enum &= ~standard_removed_mods
+
         user_scores.append(score)
 
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
     user_scores = [word2vec_model.wv[score] for score in user_scores]
-    distances, indices = NN.kneighbors([np.mean(user_scores, axis=0)])
-    beatmaps = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
+    distances, indices = NN_std.kneighbors([np.mean(user_scores, axis=0)])
+    beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
 
-    beatmaps = [
-        [beatmap.split("-")[0], mod_enum_to_names(int(beatmap.split("-")[1]))]
-        for beatmap in beatmaps
-    ]
+    rows = []
+    for beatmap_and_mods in beatmaps_and_mods:
+        beatmap_id, mods = beatmap_and_mods.split("-")
+        mods = int(mods)
+        mods = mod_enum_to_names(mods)
+        title = get_beatmap_name(beatmap_id)
 
-    return jsonify(beatmaps)
+        rows.append(
+            {
+                "beatmap_id": beatmap_id,
+                "mods": mods,
+                "title": title,
+                "beatmap_link": get_beatmap_link(beatmap_id),
+            }
+        )
+
+    return jsonify(rows)
 
 
 if __name__ == "__main__":

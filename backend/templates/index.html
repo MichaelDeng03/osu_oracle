@@ -33,16 +33,17 @@
 <body>
     <div class="table">
         <div class="column1">
-            repo: https://github.com/MichaelDeng03/osu_oracle2 <br>
-            <a href="/wip"> What I'm working on rn. </a>
+            repo: https://github.com/MichaelDeng03/osu_oracle2 
+            <br> <a href="/wip"> What I'm working on rn. </a>
             <h1> Scores</h1>
-            <br> Populate your scores with either your user id, or with individual scores (or both). Both values are the
-            number ONLY. If you were me https://osu.ppy.sh/users/28956125, then you would enter 28956125. For individual
-            scores, hit the three vertical dots then view details. My top play is
-            https://osu.ppy.sh/scores/osu/4470046750, so I would enter 4470046750. Due to my ineptitude you'll have to
-            refresh the page to clear your recommended.number</br>
+            <br> Populate your scores with either your user id, or with individual scores (or both). Both values are the number ONLY. If you were me https://osu.ppy.sh/users/28956125, then you would enter 28956125. For individual scores, hit the three vertical dots then view details. My top play is https://osu.ppy.sh/scores/osu/4470046750, so I would enter 4470046750. Due to my ineptitude you'll have to refresh the page to clear your recommended beatmaps.
+            <!-- <br> The No HD model disregards HD. HD is pretty much just a preference mod. This should help with too many HR recommendations.  -->
 
-            <input type="number" id="userID" placeholder="user id (ie. 28956125)">
+            <!-- <select name = "Model Select" id = "model_select">
+                <option value = "standard_model"> Standard Model </option>
+                <option value = "no_hd_model"> No HD Model </option>
+            </select> -->
+            <br> <input type="number" id="userID" placeholder="user id (ie. 28956125)">
             <input type="button" id="submitUserID" value="Submit">
 
             <div>
@@ -50,6 +51,7 @@
                     <thead>
                         <tr>
                             <th> Score ID </th>
+                            <th> Beatmap Name </th>
                             <th> Beatmap/ID </th>
                             <th> Mods </th>
                             <th> Rank/Acc </th>
@@ -67,7 +69,7 @@
 
         <div class="column2">
             <h1> Recommended Beatmaps</h1>
-            <br> Make sure your scores are populated before you hit recommend </br>
+            <br> Make sure your scores are populated before you hit recommend. If nothing shows up, most likely it's because my db has no record of similar scores. Support coming (hopefully)! 
             <br> Based on your scores, the Osu Oracle recommends... </br>
             <input type="button" id="recommendBeatmaps" value="Recommend Beatmaps">
 
@@ -76,6 +78,7 @@
                     <thead>
                         <tr>
                             <th> Beatmap ID </th>
+                            <th> Beatmap Name </th>
                             <th> Mods </th>
                         </tr>
                     </thead>
