@@ -34,7 +34,8 @@ scraping/
 
 ## Try it out
 
-osu!Oracle is currently hosted live at [http://75.101.182.162:5001/](http://75.101.182.162:5001/).
+osu!Oracle is currently hosted live at [http://75.101.182.162:5001/](http://75.101.182.162:5001/), and also osu-oracle.com:5001.
+Currently working on removing that port and migrating it to a production server.
 
 ## Contributing?
 Database schema can be found here: https://dbdiagram.io/d/osu-654e8e887d8bbd6465f40357.
@@ -42,4 +43,4 @@ You may message u/EggTofu on Reddit for a copy of the database, or scrape it you
 
 ## Disclaimer
 
-This project is not associated or endorsed by osu.ppy.sh. If you have any questions or concerns reach out to @ u/EggTofu on Reddit.
+This project is not associated or endorsed by osu.ppy.sh. If you have any questions or concerns reach out to @ u/EggTofu on Reddit, @eggtofu on discord, or on github.
