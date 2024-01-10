@@ -237,7 +237,6 @@ def predict_beatmaps():
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
-    print(user_scores)
     scores = [
         score.split("-")[0] + "-" + str(mod_names_to_enum(score.split("-")[1]))
         for score in user_scores

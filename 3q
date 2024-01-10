@@ -32,8 +32,7 @@
 
 <body>
 	<a href = "https://github.com/MichaelDeng03/osu_oracle2"> Repo </a>
-     <br> <a href="/wip"> What I'm working on rn. </a> 
-	<strong> moving to osu-oracle.com:5001. the 5001 DOES MATTER, working on getting that removed </strong>
+    <!-- <br> <a href="/wip"> What I'm working on rn. </a> -->
     <div class="table">
         <div class="column1">
             <h2> Scores</h2>
