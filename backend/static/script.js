@@ -27,7 +27,7 @@ function fetchUserTopScores(userID) {
 
 function addUserTopScores(scoreRows) {
     const tableBody = document.getElementById('scoresTableBody');
-    tableBody.innerHtml = '';
+    tableBody.innerHTML = '';
 
     scoreRows.forEach(row => {
         const newRow = tableBody.insertRow(-1);
