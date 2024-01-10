@@ -7,3 +7,5 @@ gensim
 ossapi
 bs4
 jupyter
+pandas
+cython
