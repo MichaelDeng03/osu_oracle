@@ -88,7 +88,7 @@ def scrape_users(ids):
     conn.close()
 
 
-for user_ids in partitioned_user_ids:s
+for user_ids in partitioned_user_ids:
     print(len(user_ids))
 
 with ThreadPoolExecutor(max_workers=num_partitions) as executor:
