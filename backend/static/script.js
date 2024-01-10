@@ -80,7 +80,7 @@ function removeRow(button) {
 
 function fetchRecommendedBeatmaps() {
     const userScores = document.getElementById('scoresTableBody').rows;
-    // const model = document.getElementById('model_select').value;
+    const noHD = document.getElementById('noHD').checked;
     const userScoresArray = [];
 
     for (let i = 0; i < userScores.length; i++) {
@@ -88,13 +88,16 @@ function fetchRecommendedBeatmaps() {
         mods = userScores[i].cells[3].innerHTML;
         userScoresArray.push(bm_id + '-' + mods);
     }
-
+    const postData = {
+        user_scores: userScoresArray,
+        noHD: noHD,
+    };
     fetch('/predict_beatmaps/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_scores: userScoresArray }),
+        body: JSON.stringify(postData),
     })
         .then(response => response.json())
         .then(data => addRecommendedBeatmaps(data))
@@ -108,14 +111,14 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
 
     // For each recommended
     recommendedBeatmaps.forEach(beatmap => {
-        
+
         const newRow = tableBody.insertRow(-1);
         const beatmapIDCell = newRow.insertCell(0);
         const beatmapLink = document.createElement('a');
         const beatmapName = newRow.insertCell(1);
         const stars = newRow.insertCell(2);
         const mods = newRow.insertCell(3);
-        
+
         // beatmapIDCell.textContent = beatmap['beatmap_id'];
         beatmapLink.href = beatmap['beatmap_link'];
         beatmapLink.textContent = beatmap['beatmap_id'];

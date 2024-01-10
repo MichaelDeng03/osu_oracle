@@ -17,17 +17,18 @@ conn = sqlite3.connect(
     "../data/osu.db", check_same_thread=False
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
-word2vec_model = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
-NN = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
-    word2vec_model.wv.vectors
+
+word2vec_model_std = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
+NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
+    word2vec_model_std.wv.vectors
 )
 
-# word2vec_model_noHD = gensim.models.Word2Vec.load(
-#     "../Models/w2v_model_noHD/w2v_model_noHD"
-# )
-# NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
-#     word2vec_model_noHD.wv.vectors
-# )
+word2vec_model_noHD = gensim.models.Word2Vec.load(
+    "../Models/w2v_model_noHD_200d/w2v_model_noHD_200d"
+)
+NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
+    word2vec_model_noHD.wv.vectors
+)
 
 
 mod_enums_list = [
@@ -216,6 +217,7 @@ def predict_beatmaps():
     returns: beatmaps = jsonified list of bm_ids-mods_enum
     """
     data = request.json
+    noHD = data.get("noHD")
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
@@ -224,22 +226,28 @@ def predict_beatmaps():
         for score in user_scores
     ]
     user_scores = []
+
     for score in scores:
         bm_id, mod_enum = score.split("-")
         mod_enum = int(mod_enum)
-        # mod_enum &= ~standard_removed_mods
-        mod_enum &= ~noHD_removed_mods
+        if noHD:
+            mod_enum &= ~noHD_removed_mods
+        else:
+            mod_enum &= ~standard_removed_mods
 
-        user_scores.append(score)
+        user_scores.append(f"{bm_id}-{mod_enum}")
 
-    # word2vec_model = word2vec_model_noHD  # CHANGE LATER
-    # NN = NN_noHD  # CHANGE LATER
+    if noHD:
+        word2vec_model = word2vec_model_noHD  # CHANGE LATER
+        NN = NN_noHD  # CHANGE LATER
+    else:
+        word2vec_model = word2vec_model_std
+        NN = NN_std
 
-    print(user_scores)
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
-    print(user_scores)
+
     user_scores = [word2vec_model.wv[score] for score in user_scores]
 
     distances, indices = NN.kneighbors([np.mean(user_scores, axis=0)])
