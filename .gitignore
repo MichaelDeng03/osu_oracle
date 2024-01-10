@@ -1,5 +1,7 @@
-# sooooooooo chonky
+# too chonky to push.
 *.db
 # You'll have to get your own access token. Configuring individual user access tokens is a couple miles down the roadmap. 
 osu_access_token.py 
 *.pyc
+# Slightly too large
+Models/w2v_model*
