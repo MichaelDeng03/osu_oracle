@@ -90,6 +90,9 @@ def mod_enum_to_names(mod_enum):
 
 def mod_names_to_enum(mod_names):
     mod_names = mod_names.split(", ")
+    if "" in mod_names:
+        mod_names.remove("")
+
     enum = 0
     for mod_name in mod_names:
         enum += mod_enums[mod_name]
@@ -139,7 +142,7 @@ def get_beatmap_link(beatmap_id):
     try:
         query = f"SELECT beatmapset_id FROM beatmaps WHERE beatmap_id = {beatmap_id}"
         beatmapset_id = cursor.execute(query).fetchone()[0]
-        query = f"SELECT beatmapset_link FROM beatmapsets WHERE beatmapset_id = {beatmapset_id}"
+        query = f"SELECT beatmapset_link FFROM beatmapsets WHERE beatmapset_id = {beatmapset_id}"
     except Exception as e:
         print(e)
         beatmap = Beatmap(api.beatmap(beatmap_id))
@@ -199,7 +202,20 @@ def get_user_scores(user_id):
     for score in scores:
         score.mods = mod_enum_to_names(score.mods)
 
-    return jsonify(scores)
+    rows = []
+    for score in scores:
+        rows.append(
+            {
+                "score_id": score.score_id,
+                "beatmap_id": score.beatmap_id,
+                "beatmap_link": get_beatmap_link(score.beatmap_id),
+                "beatmap_name": score.name,
+                "mods": score.mods,
+                "rank": score.rank,
+            }
+        )
+
+    return jsonify(rows)
 
 
 @app.route("/get_user_score/<int:score_id>")
@@ -221,6 +237,7 @@ def predict_beatmaps():
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
+    print(user_scores)
     scores = [
         score.split("-")[0] + "-" + str(mod_names_to_enum(score.split("-")[1]))
         for score in user_scores
