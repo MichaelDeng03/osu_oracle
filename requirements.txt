@@ -1,0 +1,9 @@
+flask
+sklearn
+scikit-learn
+scipy
+matplotlib
+gensim
+ossapi
+bs4
+jupyter
