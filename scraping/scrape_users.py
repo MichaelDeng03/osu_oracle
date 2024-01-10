@@ -38,7 +38,7 @@ def scrape_users(ids):
     """
     global num_done
     global last_time
-    conn = sqlite3.connect("../data/osu2.db")  # Change to osu.db in the future
+    conn = sqlite3.connect("../data/osu.db")  # Change to osu.db in the future
     cursor = conn.cursor()
 
     for user_id in ids:
