@@ -38,7 +38,7 @@ osu!Oracle is currently hosted live at [http://75.101.182.162:5001/](http://75.1
 
 ## Contributing?
 Database schema can be found here: https://dbdiagram.io/d/osu-654e8e887d8bbd6465f40357.
-You may message u/EggTofu on Reddit for a copy of the database.
+You may message u/EggTofu on Reddit for a copy of the database, or scrape it yourself using the scripts provided in /scraping.
 
 ## Disclaimer
 
