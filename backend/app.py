@@ -222,8 +222,17 @@ def get_user_scores(user_id):
 def get_user_score(score_id):
     score = Score(api.score("osu", score_id))
     score.mods = mod_enum_to_names(score.mods)
+    score.name = get_beatmap_name(score.beatmap_id)
 
-    return jsonify(score)
+    row = {
+        "score_id": score.score_id,
+        "beatmap_id": score.beatmap_id,
+        "beatmap_link": get_beatmap_link(score.beatmap_id),
+        "beatmap_name": score.name,
+        "mods": score.mods,
+        "rank": score.rank,
+    }
+    return jsonify(row)
 
 
 @app.route("/predict_beatmaps/", methods=["POST"])
@@ -290,4 +299,4 @@ def predict_beatmaps():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -63,19 +63,30 @@ function fetchUserScore(scoreID) {
         .catch(error => console.log("Error: " + error));
 }
 
-function addUserScore(userScore) {
+function addUserScore(row) {
     const tableBody = document.getElementById('scoresTableBody');
     const newRow = tableBody.insertRow(-1);
-    const scoreIDCell = newRow.insertCell(0);
-    const beatmapCell = newRow.insertCell(1);
-    const modsCell = newRow.insertCell(2);
-    const rankCell = newRow.insertCell(3);
-    const removeCell = newRow.insertCell(4);
 
-    scoreIDCell.textContent = userScore.id;
-    beatmapCell.textContent = userScore.beatmap_id;
-    modsCell.textContent = userScore.mods;
-    rankCell.textContent = userScore.rank;
+    const scoreIDCell = newRow.insertCell(0);
+    const beatmapIDCell = newRow.insertCell(1);
+    const beatmapNameCell = newRow.insertCell(2);
+    const modsCell = newRow.insertCell(3);
+    const rankCell = newRow.insertCell(4);
+    const removeCell = newRow.insertCell(5);
+
+    const scoreLink = document.createElement('a');
+    scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + row["score_id"];
+    scoreLink.textContent = row["score_id"];
+    scoreIDCell.appendChild(scoreLink);
+
+    const beatmapLink = document.createElement('a');
+    beatmapLink.href = row['beatmap_link'];
+    beatmapLink.textContent = row["beatmap_id"];
+    beatmapIDCell.appendChild(beatmapLink);
+
+    beatmapNameCell.textContent = row["beatmap_name"];
+    modsCell.textContent = row["mods"];
+    rankCell.textContent = row["rank"];
     removeCell.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
 }
 
