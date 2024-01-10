@@ -12,9 +12,9 @@ from osu_access_token import client_id, client_secret
 
 app = Flask(__name__)
 api = Ossapi(client_id, client_secret)
-conn = sqlite3.connect("../data/osu.db")
+# conn = sqlite3.connect("../data/osu.db")
 
-word2vec_model = gensim.models.Word2Vec.load("../Predictions/w2v_model/w2v_model")
+word2vec_model = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
 NN = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model.wv.vectors
 )
@@ -75,6 +75,11 @@ def mod_names_to_enum(mod_names):
     return enum
 
 
+@app.route("/wip")
+def wip():
+    return render_template("wip.html")
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -97,14 +102,8 @@ def get_user_scores(user_id):
         print(e)
         return None
 
-    # Remove NC, SD, and SO
-    
     for score in scores:
-        score.mods = mod_enum_to_names(score.mods).split(', ')
-        score.mods.remove('Nightcore')
-        score.mods.remove('SuddenDeath')
-        score.mods.remove('SpunOut')
-        score.mods = ', '.join(score.mods)
+        score.mods = mod_enum_to_names(score.mods)
 
     return jsonify(scores)
 
@@ -128,12 +127,24 @@ def predict_beatmaps():
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
-    user_scores = [
+    scores = [
         score.split("-")[0] + "-" + str(mod_names_to_enum(score.split("-")[1]))
         for score in user_scores
     ]
+    user_scores = []
+    for score in scores:
+        bm_id, mod_enum = score.split("-")
+        mod_enum = int(mod_enum)
+        NC = 512
+        SD = 32
+        SO = 4096
+        PF = 16384
+        mod_enum &= ~NC
+        mod_enum &= ~SD
+        mod_enum &= ~SO
+        mod_enum &= ~PF
+        user_scores.append(score)
 
-    print(user_scores)
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
@@ -150,4 +161,4 @@ def predict_beatmaps():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

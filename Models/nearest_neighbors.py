@@ -1,3 +1,5 @@
+""" Basically the same thing as the jupyter notebook. Not really necessary, nor updated"""
+
 # import sqlite3
 from ossapi import Ossapi
 import gensim

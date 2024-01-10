@@ -8,7 +8,7 @@ from numpy import array_split
 from threading import Lock
 
 sys.path.insert(0, "../")
-from data.classes import Beatmap, Beatmapset
+from data.classes import Beatmap, Beatmapset # I run this script from scraping sometimes so I need to add the parent directory to the path
 from osu_access_token import client_id, client_secret
 
 api = Ossapi(client_id, client_secret)
@@ -75,13 +75,16 @@ beatmapset_ids = set([beatmapset_id[0] for beatmapset_id in beatmapset_ids])
 completed_beatmapset_ids = cursor.execute(
     "SELECT beatmapset_id FROM beatmapsets"
 ).fetchall()
-completed_beatmapset_ids = set([beatmapset_id[0] for beatmapset_id in completed_beatmapset_ids])
+completed_beatmapset_ids = set(
+    [beatmapset_id[0] for beatmapset_id in completed_beatmapset_ids]
+)
 
 beatmapset_ids = list(beatmapset_ids - completed_beatmapset_ids)
 partitioned_beatmapset_ids = array_split(beatmapset_ids, num_partitions)
 
 num_beatmapset_done = len(completed_beatmapset_ids)
 conn.close()
+
 
 def scrape_beatmapsets(ids):
     """
@@ -103,7 +106,9 @@ def scrape_beatmapsets(ids):
             num_beatmapset_done += 1
             time.sleep(0.06)
             if num_beatmapset_done % 100 == 0:
-                print(f"Beatmapsets done: {num_beatmapset_done}/{len(beatmapset_ids) + len(completed_beatmapset_ids)} @ {strftime('%H:%M:%S', localtime(time.time()))}")
+                print(
+                    f"Beatmapsets done: {num_beatmapset_done}/{len(beatmapset_ids) + len(completed_beatmapset_ids)} @ {strftime('%H:%M:%S', localtime(time.time()))}"
+                )
             conn.commit()
 
 

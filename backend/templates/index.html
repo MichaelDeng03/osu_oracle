@@ -33,7 +33,15 @@
 <body>
     <div class="table">
         <div class="column1">
+            repo: https://github.com/MichaelDeng03/osu_oracle2 <br>
+            <a href="/wip"> What I'm working on rn. </a>
             <h1> Scores</h1>
+            <br> Populate your scores with either your user id, or with individual scores (or both). Both values are the
+            number ONLY. If you were me https://osu.ppy.sh/users/28956125, then you would enter 28956125. For individual
+            scores, hit the three vertical dots then view details. My top play is
+            https://osu.ppy.sh/scores/osu/4470046750, so I would enter 4470046750. Due to my ineptitude you'll have to
+            refresh the page to clear your recommended.number</br>
+
             <input type="number" id="userID" placeholder="user id (ie. 28956125)">
             <input type="button" id="submitUserID" value="Submit">
 
@@ -45,7 +53,7 @@
                             <th> Beatmap/ID </th>
                             <th> Mods </th>
                             <th> Rank/Acc </th>
-                            <th> Remove </th>
+                            <th> </th>
                         </tr>
                     </thead>
                     <tbody id="scoresTableBody">
@@ -59,11 +67,12 @@
 
         <div class="column2">
             <h1> Recommended Beatmaps</h1>
-            <br> Based on the scores to your left, we recommend the following beatmaps. </br>
-            <input type="button" id = "recommendBeatmaps" value = "Recommend Beatmaps">
+            <br> Make sure your scores are populated before you hit recommend </br>
+            <br> Based on your scores, the Osu Oracle recommends... </br>
+            <input type="button" id="recommendBeatmaps" value="Recommend Beatmaps">
 
             <div>
-                <table id = "recommendedBeatmaps">
+                <table id="recommendedBeatmaps">
                     <thead>
                         <tr>
                             <th> Beatmap ID </th>

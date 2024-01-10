@@ -9,7 +9,7 @@ import time
 import sys
 
 sys.path.insert(
-    0, "../"
+    0, "../" # I run this script from scraping sometimes so I need to add the parent directory to the path
 )  # To import osu_access_token and classes from parent directory
 from osu_access_token import client_id, client_secret
 

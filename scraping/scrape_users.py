@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import sys
 from numpy import array_split
 
-sys.path.insert(0, "../")
+sys.path.insert(0, "../") # I run this script from scraping sometimes so I need to add the parent directory to the path
 from data.classes import User, Score
 from osu_access_token import client_id, client_secret
 
