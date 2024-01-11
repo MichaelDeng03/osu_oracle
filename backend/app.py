@@ -21,13 +21,14 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
+word2vec_model_std = gensim.models.Word2Vec.load(
+    "../Models/w2v_model_200d_50e/w2v_model_200d_50e"
+)
 NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
 )
-
 word2vec_model_noHD = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_200d_50e/w2v_model_200d_50e"
+    "../Models/w2v_model_noHD_200d_50e/w2v_model_noHD_200d_50e"
 )
 NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_noHD.wv.vectors
@@ -293,7 +294,7 @@ def predict_beatmaps():
         centers = xmeans_instance.get_centers()
 
     else:
-        centers = [np.mean(user_scores, axis=0 )]
+        centers = [np.mean(user_scores, axis=0)]
 
     rows = []
 
