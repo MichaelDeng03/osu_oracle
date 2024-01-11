@@ -299,7 +299,8 @@ def predict_beatmaps():
     rows = []
 
     for center in centers:
-        if len(center) > 5:  # Consider it a cluster only if it has more than 5 scores.
+        if len(center) > int(0.05 * len(user_scores)):
+            # Consider it a cluster only if it has more than 5% of the scores
             row_segment = []
             center = [np.array(center)]
             _, indices = NN.kneighbors(center)
