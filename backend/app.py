@@ -6,7 +6,8 @@ import numpy as np
 from ossapi import Ossapi
 import sqlite3
 import threading
-
+import logging
+from logging.handlers import RotatingFileHandler
 sys.path.insert(0, "../")
 from data.classes import Score, Beatmap, Beatmapset
 from osu_access_token import client_id, client_secret
@@ -299,4 +300,7 @@ def predict_beatmaps():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
+    handler.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
+    app.run(host="0.0.0.0", port=8000, debug=True)

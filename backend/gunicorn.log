@@ -1,0 +1,20 @@
+[2024-01-11 17:12:29 +0000] [90578] [INFO] Starting gunicorn 21.2.0
+[2024-01-11 17:12:29 +0000] [90578] [INFO] Listening at: http://127.0.0.1:8000 (90578)
+[2024-01-11 17:12:29 +0000] [90578] [INFO] Using worker: sync
+[2024-01-11 17:12:29 +0000] [90579] [INFO] Booting worker with pid: 90579
+[2024-01-11 17:12:29 +0000] [90580] [INFO] Booting worker with pid: 90580
+[2024-01-11 17:13:01 +0000] [90578] [INFO] Handling signal: int
+[2024-01-11 17:13:01 +0000] [90579] [INFO] Worker exiting (pid: 90579)
+[2024-01-11 17:13:01 +0000] [90580] [INFO] Worker exiting (pid: 90580)
+[2024-01-11 17:13:01 +0000] [90578] [ERROR] Worker (pid:90579) was sent SIGINT!
+[2024-01-11 17:13:01 +0000] [90578] [ERROR] Worker (pid:90580) was sent SIGINT!
+[2024-01-11 17:13:01 +0000] [90578] [INFO] Shutting down: Master
+[2024-01-11 17:13:21 +0000] [90590] [INFO] Starting gunicorn 21.2.0
+[2024-01-11 17:13:21 +0000] [90590] [INFO] Listening at: http://127.0.0.1:8000 (90590)
+[2024-01-11 17:13:21 +0000] [90590] [INFO] Using worker: sync
+[2024-01-11 17:13:21 +0000] [90591] [INFO] Booting worker with pid: 90591
+[2024-01-11 17:13:21 +0000] [90592] [INFO] Booting worker with pid: 90592
+[2024-01-11 17:13:36 +0000] [90590] [INFO] Handling signal: int
+[2024-01-11 17:13:36 +0000] [90591] [INFO] Worker exiting (pid: 90591)
+[2024-01-11 17:13:37 +0000] [90592] [INFO] Worker exiting (pid: 90592)
+[2024-01-11 17:13:37 +0000] [90590] [INFO] Shutting down: Master
