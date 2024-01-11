@@ -27,7 +27,7 @@ NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
 )
 
 word2vec_model_noHD = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_noHD_200d/w2v_model_noHD_200d"
+    "../Models/w2v_model_200d_50e/w2v_model_200d_50e"
 )
 NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_noHD.wv.vectors
@@ -281,38 +281,45 @@ def predict_beatmaps():
     # Cluster user scores so skillsets are not mixed.
     if detect_skillsets:
         xmeans_instance = xmeans(
-            data=user_scores, initial_centers=None, kmax=5, tolerance=0.0001, ccore=True
+            data=user_scores,
+            initial_centers=None,
+            kmax=5,
+            tolerance=0.0001,
+            ccore=True,
+            repeat=10,
+            random_state=1,
         )
         xmeans_instance.process()
         centers = xmeans_instance.get_centers()
 
     else:
-        centers = [np.mean(user_scores, axis=0)]
-    
+        centers = [np.mean(user_scores, axis=0 )]
+
     rows = []
 
     for center in centers:
-        row_segment = []
-        center = [np.array(center)]
-        _, indices = NN.kneighbors(center)
-        beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
+        if len(center) > 5:  # Consider it a cluster only if it has more than 5 scores.
+            row_segment = []
+            center = [np.array(center)]
+            _, indices = NN.kneighbors(center)
+            beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
 
-        for beatmap_and_mods in beatmaps_and_mods:
-            beatmap_id, mods = beatmap_and_mods.split("-")
-            mods = int(mods)
-            mods = mod_enum_to_names(mods)
-            title = get_beatmap_name(beatmap_id)
+            for beatmap_and_mods in beatmaps_and_mods:
+                beatmap_id, mods = beatmap_and_mods.split("-")
+                mods = int(mods)
+                mods = mod_enum_to_names(mods)
+                title = get_beatmap_name(beatmap_id)
 
-            row_segment.append(
-                {
-                    "beatmap_id": beatmap_id,
-                    "mods": mods,
-                    "title": title,
-                    "beatmap_link": get_beatmap_link(beatmap_id),
-                    "stars": get_beatmap_stars(beatmap_id),
-                }
-            )
-        rows.append(row_segment)
+                row_segment.append(
+                    {
+                        "beatmap_id": beatmap_id,
+                        "mods": mods,
+                        "title": title,
+                        "beatmap_link": get_beatmap_link(beatmap_id),
+                        "stars": get_beatmap_stars(beatmap_id),
+                    }
+                )
+            rows.append(row_segment)
 
     return jsonify(rows)
 
