@@ -6,9 +6,9 @@ import numpy as np
 from ossapi import Ossapi
 import sqlite3
 import threading
-import logging
-from logging.handlers import RotatingFileHandler
-from pyclustering.cluster.xmeans import xmeans
+
+# from pyclustering.cluster.xmeans import xmeans
+from sklearn.cluster import KMeans
 
 sys.path.insert(0, "../")
 from data.classes import Score, Beatmap, Beatmapset
@@ -281,18 +281,20 @@ def predict_beatmaps():
 
     # Cluster user scores so skillsets are not mixed.
     if detect_skillsets:
-        xmeans_instance = xmeans(
-            data=user_scores,
-            initial_centers=None,
-            kmax=5,
-            tolerance=0.0001,
-            ccore=True,
-            repeat=10,
-            random_state=1,
-        )
-        xmeans_instance.process()
-        centers = xmeans_instance.get_centers()
-
+        # xmeans_instance = xmeans(
+        #     data=user_scores,
+        #     initial_centers=None,
+        #     kmax=5,
+        #     tolerance=0.0001    ,
+        #     ccore=True,
+        #     repeat=10,
+        #     random_state=2,
+        # )
+        # xmeans_instance.process()
+        # centers = xmeans_instance.get_centers()
+        kmeans = KMeans(n_clusters=3, n_init=2, max_iter=50)  # Little bit of randomness
+        kmeans.fit(user_scores)
+        centers = kmeans.cluster_centers_
     else:
         centers = [np.mean(user_scores, axis=0)]
 
@@ -327,7 +329,4 @@ def predict_beatmaps():
 
 
 if __name__ == "__main__":
-    handler = RotatingFileHandler("app.log", maxBytes=10000, backupCount=3)
-    app.logger.addHandler(handler)
-    handler.setLevel(logging.INFO)
     app.run(host="0.0.0.0", port=8000, debug=True)

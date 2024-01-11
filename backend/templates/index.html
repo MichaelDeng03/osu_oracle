@@ -39,7 +39,7 @@
             <br> Populate your scores with either your user id, or with individual scores (or both). Both values are the
             number ONLY. If you were me https://osu.ppy.sh/users/28956125, then you would enter 28956125 for score id.
             If I wanted to find a map similar to my top score,
-            https://osu.ppy.sh/scores/osu/4470046750, I would enter 44700046750.
+            https://osu.ppy.sh/scores/osu/4470046750, I would enter 4470046750.
 
             <br> <input type="number" id="userID" placeholder="user id (ie. 28956125)">
             <input type="button" id="submitUserID" value="Submit">
@@ -71,7 +71,9 @@
             because my db has no record of similar scores. Support coming (hopefully)!
             <br> Removing HD will change your recommendations beyond just stripping the HD mod. Even if you are an HD
             player, you should still consider ticking the box.
-            <br> Detect skillsets will change recommendations by (attempting) to partition your plays based on skillset. Recommendation skillsets are split by horizontal line.
+            <br> Detect skillsets will change recommendations by (attempting) to partition your plays based on skillset.
+            Recommendation skillsets are arbitrarily ordered and split by horizontal line. Results are
+            non-deterministic, and may take a little time to show up (~5s)
             <br> Based on your scores, the Osu Oracle recommends... </br>
             <input type="button" id="recommendBeatmaps" value="Recommend Beatmaps">
             <input type="checkbox" id="noHD" name="noHD" value="noHD">
