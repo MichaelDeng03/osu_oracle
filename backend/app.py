@@ -22,13 +22,13 @@ conn = sqlite3.connect(
 lock = threading.Lock()
 
 word2vec_model_std = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_200d_50e/w2v_model_200d_50e"
+    "../Models/w2v_model_200d/w2v_model_200d"
 )
 NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
 )
 word2vec_model_noHD = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_noHD_200d_50e/w2v_model_noHD_200d_50e"
+    "../Models/w2v_model_noHD_200d/w2v_model_noHD_200d"
 )
 NN_noHD = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_noHD.wv.vectors
