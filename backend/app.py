@@ -8,6 +8,8 @@ import sqlite3
 import threading
 import logging
 from logging.handlers import RotatingFileHandler
+from pyclustering.cluster.xmeans import xmeans
+
 sys.path.insert(0, "../")
 from data.classes import Score, Beatmap, Beatmapset
 from osu_access_token import client_id, client_secret
@@ -244,6 +246,7 @@ def predict_beatmaps():
     """
     data = request.json
     noHD = data.get("noHD")
+    detect_skillsets = data.get("detectSkillsets")
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
@@ -273,34 +276,49 @@ def predict_beatmaps():
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
+    user_scores = [tuple(word2vec_model.wv[score]) for score in user_scores]
 
-    user_scores = [word2vec_model.wv[score] for score in user_scores]
-
-    distances, indices = NN.kneighbors([np.mean(user_scores, axis=0)])
-    beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
-
-    rows = []
-    for beatmap_and_mods in beatmaps_and_mods:
-        beatmap_id, mods = beatmap_and_mods.split("-")
-        mods = int(mods)
-        mods = mod_enum_to_names(mods)
-        title = get_beatmap_name(beatmap_id)
-
-        rows.append(
-            {
-                "beatmap_id": beatmap_id,
-                "mods": mods,
-                "title": title,
-                "beatmap_link": get_beatmap_link(beatmap_id),
-                "stars": get_beatmap_stars(beatmap_id),
-            }
+    # Cluster user scores so skillsets are not mixed.
+    if detect_skillsets:
+        xmeans_instance = xmeans(
+            data=user_scores, initial_centers=None, kmax=5, tolerance=0.0001, ccore=True
         )
+        xmeans_instance.process()
+        centers = xmeans_instance.get_centers()
+
+    else:
+        centers = [np.mean(user_scores, axis=0)]
+    
+    rows = []
+
+    for center in centers:
+        row_segment = []
+        center = [np.array(center)]
+        _, indices = NN.kneighbors(center)
+        beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
+
+        for beatmap_and_mods in beatmaps_and_mods:
+            beatmap_id, mods = beatmap_and_mods.split("-")
+            mods = int(mods)
+            mods = mod_enum_to_names(mods)
+            title = get_beatmap_name(beatmap_id)
+
+            row_segment.append(
+                {
+                    "beatmap_id": beatmap_id,
+                    "mods": mods,
+                    "title": title,
+                    "beatmap_link": get_beatmap_link(beatmap_id),
+                    "stars": get_beatmap_stars(beatmap_id),
+                }
+            )
+        rows.append(row_segment)
 
     return jsonify(rows)
 
 
 if __name__ == "__main__":
-    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-    handler.setLevel(logging.INFO)
+    handler = RotatingFileHandler("app.log", maxBytes=10000, backupCount=3)
     app.logger.addHandler(handler)
+    handler.setLevel(logging.INFO)
     app.run(host="0.0.0.0", port=8000, debug=True)

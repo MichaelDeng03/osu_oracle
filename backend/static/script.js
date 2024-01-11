@@ -98,6 +98,7 @@ function removeRow(button) {
 function fetchRecommendedBeatmaps() {
     const userScores = document.getElementById('scoresTableBody').rows;
     const noHD = document.getElementById('noHD').checked;
+    const detectSkillsets = document.getElementById('detectSkillsets').checked;
     const userScoresArray = [];
 
     for (let i = 0; i < userScores.length; i++) {
@@ -108,6 +109,7 @@ function fetchRecommendedBeatmaps() {
     const postData = {
         user_scores: userScoresArray,
         noHD: noHD,
+        detectSkillsets: detectSkillsets
     };
     fetch('/predict_beatmaps/', {
         method: 'POST',
@@ -127,21 +129,30 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
     tableBody.innerHTML = '';
 
     // For each recommended
-    recommendedBeatmaps.forEach(beatmap => {
-        const newRow = tableBody.insertRow(-1);
-        const beatmapIDCell = newRow.insertCell(0);
-        const beatmapLink = document.createElement('a');
-        const beatmapName = newRow.insertCell(1);
-        const stars = newRow.insertCell(2);
-        const mods = newRow.insertCell(3);
+    recommendedBeatmaps.forEach(beatmapSegment => {
+        beatmapSegment.forEach(beatmap => {
+            const newRow = tableBody.insertRow(-1);
+            const beatmapIDCell = newRow.insertCell(0);
+            const beatmapLink = document.createElement('a');
+            const beatmapName = newRow.insertCell(1);
+            const stars = newRow.insertCell(2);
+            const mods = newRow.insertCell(3);
 
-        // beatmapIDCell.textContent = beatmap['beatmap_id'];
-        beatmapLink.href = beatmap['beatmap_link'];
-        beatmapLink.textContent = beatmap['beatmap_id'];
-        beatmapIDCell.appendChild(beatmapLink);
-        beatmapName.textContent = beatmap['title'];
-        stars.textContent = beatmap['stars'];
-        mods.textContent = beatmap['mods'];
+            // beatmapIDCell.textContent = beatmap['beatmap_id'];
+            beatmapLink.href = beatmap['beatmap_link'];
+            beatmapLink.textContent = beatmap['beatmap_id'];
+            beatmapIDCell.appendChild(beatmapLink);
+            beatmapName.textContent = beatmap['title'];
+            stars.textContent = beatmap['stars'];
+            mods.textContent = beatmap['mods'];
+        });
+        // LINE GOES HERE
+        const divider = tableBody.insertRow(-1);
+        const dividerCell = divider.insertCell(0);
+        dividerCell.colSpan = 4;
+        hr = document.createElement('hr');
+        dividerCell.appendChild(hr);
+
     });
 
 
