@@ -62,6 +62,7 @@ function addUserTopScores(scoreRows) {
         beatmapNameCell.textContent = row["beatmap_name"];
 
         modsCell.innerHTML = modsToImages(row["mods"]);
+        modsCell.setAttribute('mods', row["mods"]);
 
         let r = row["rank"]
         r = r.replace('H', '-Silver')
@@ -76,7 +77,7 @@ function addUserTopScores(scoreRows) {
 function modsToImages(mods) {
     // This is hacky, considering rewriting script.js from ground up.
     const cdn = 'https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/mods/mod_'
-    const template = `<img src="${cdn}MOD.png" width=25px>`
+    const template = `<img src="${cdn}MOD.png" original="ORIGINAL" width=25px>`
 
     // TODO: Missing some niche mods like EZ & Flashlight, but I doubt badeu would be using this for now.
     // I'm being lazy.
@@ -84,7 +85,6 @@ function modsToImages(mods) {
     mods = mods.replace('Double Time', template.replace('MOD', 'double-time'))
     mods = mods.replace('Nightcore', template.replace('MOD', 'double-time'))
     mods = mods.replace('Hard Rock', template.replace('MOD', 'hard-rock'))
-
     mods = mods.replaceAll(',', '')
 
     return mods
@@ -119,14 +119,18 @@ function addUserScore(row) {
     beatmapIDCell.appendChild(beatmapLink);
 
     beatmapNameCell.textContent = row["beatmap_name"];
+    
     modsCell.innerHTML = modsToImages(row["mods"]);
+    modsCell.setAttribute('mods', row["mods"]);
 
     let r = row["rank"]
+    let original = row["rank"]
     r = r.replace('H', '-Silver')
     r = r.replace('X', 'SS')
 
     rankCell.innerHTML = `
-        <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
+        <img
+            src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
     removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
 }
 
@@ -142,8 +146,9 @@ function fetchRecommendedBeatmaps() {
     const userScoresArray = [];
 
     for (let i = 0; i < userScores.length; i++) {
-        bm_id = userScores[i].cells[1].textContent;
-        mods = userScores[i].cells[3].innerHTML;
+        // Jesus fucking christ.
+        bm_id = /#osu\/(\d+)/.exec(userScores[i].cells[1].innerHTML)[0].replace('#osu/', '');
+        mods = userScores[i].cells[3].getAttribute("mods");
         userScoresArray.push(bm_id + '-' + mods);
     }
     const postData = {
@@ -184,7 +189,8 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
             beatmapIDCell.appendChild(beatmapLink);
             beatmapName.textContent = beatmap['title'];
             stars.textContent = beatmap['stars'];
-            mods.textContent = beatmap['mods'];
+            mods.innerHTML = modsToImages(row["mods"]);
+            mods.setAttribute('mods', row["mods"]);
         });
         // LINE GOES HERE
         const divider = tableBody.insertRow(-1);
