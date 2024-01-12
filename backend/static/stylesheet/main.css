@@ -1,0 +1,141 @@
+/*
+    TODO:
+        Responsive design for mobile.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,400;0,500;0,700;1,300&display=swap');
+
+:root {
+    /* Background colors */
+    --background-primary: #171a1c;
+    --background-secondary: #22282a;
+    --background-header: #2e3538;
+
+    /* Text colors */
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+
+    /* Accent colors */
+    --accent-primary: #4caf50; /* Green accent color */
+    --accent-secondary: #3498db; /* Blue accent color */
+    --accent-tertiary: #e74c3c; /* Red accent color */
+
+    /* Border colors */
+    --border-color: #333333;
+
+    /* Button colors */
+    --button-primary: var(--accent-primary);
+    --button-secondary: #555555;
+
+    /* Link colors */
+    --link-color: #3498db;
+
+    /* Input colors */
+    --input-background: #2c2c2c;
+    --input-text: #ffffff;
+
+    /* Shadow color */
+    --box-shadow: rgba(0, 0, 0, 0.3);
+}
+
+html, body {
+    margin: 0px;
+    padding: 0px;
+
+    color: var(--text-primary);
+    background-color: var(--background-primary);
+
+    font-family: 'Ubuntu', sans-serif;
+}
+
+table {
+    margin-top: 5px;
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    padding-bottom: 5px;
+    border-radius: 6px;
+    background-color: var(--background-header);
+
+    box-shadow: 2px 2px 6px rgba(0,0,0,.1);
+    margin-bottom: 0px;
+
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+
+    font-weight: normal;
+
+}
+
+
+.header-color {
+    background-color: red;
+}
+
+button {
+    box-shadow: 2px 2px 6px rgba(0,0,0,.1);
+}
+
+nav {
+    height: 55px;
+    margin-bottom: 10px;
+    background-color: var(--background-header);
+}
+
+h2 {
+    margin-top: 7px;
+    padding: 10px;
+}
+
+.section {
+    padding: 5px;
+    border-radius: 7px;
+}
+
+.section-color {
+    border-radius: 7px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+.section-description {
+    color: var(--text-secondary);
+}
+
+.section-submit {
+    width: 100%;
+    margin: 5px 0px;
+}
+
+.map-delete {
+    color: var(--text-secondary);
+    padding: 5px;
+
+    transition: transform ease 0.2s;
+}
+
+.map-delete:hover {
+    color: var(--accent-tertiary);
+
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.fa-link, .fa-map {
+    color: var(--text-secondary);
+
+    transition: transform ease 0.2s;
+}
+
+
+.fa-link:hover, .fa-map:hover {
+    color: var(--accent-secondary);
+
+    transform: scale(1.1);
+    cursor: pointer;
+}

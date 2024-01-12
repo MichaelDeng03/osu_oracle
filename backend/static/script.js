@@ -5,12 +5,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitScoreID = document.getElementById('submitScoreID');
     const getRecommendedBeatmaps = document.getElementById('recommendBeatmaps');
 
+    /*
+    TODO:
+        Error checking and handling of invalid URL's.
+    */
     submitUserID.addEventListener('click', () => {
-        fetchUserTopScores(userID.value);
+        const regex = /\/users\/(\d+)/;
+        const match = userID.value.match(regex);
+
+        fetchUserTopScores(match[1]);
     });
 
     submitScoreID.addEventListener('click', () => {
-        fetchUserScore(scoreID.value);
+        const regex = /\/(\d+)$/;
+        const match = scoreID.value.match(regex);
+
+        fetchUserScore(match[1]);
     });
 
     getRecommendedBeatmaps.addEventListener('click', () => {
@@ -41,19 +51,43 @@ function addUserTopScores(scoreRows) {
 
         const scoreLink = document.createElement('a');
         scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + row["score_id"];
-        scoreLink.textContent = row["score_id"];
+        scoreLink.innerHTML = `<i class="fa-solid fa-link"></i>`
         scoreIDCell.appendChild(scoreLink);
 
         const beatmapLink = document.createElement('a');
         beatmapLink.href = row['beatmap_link'];
-        beatmapLink.textContent = row["beatmap_id"];
+        beatmapLink.innerHTML = `<i class="fa-solid fa-map"></i>`;
         beatmapIDCell.appendChild(beatmapLink);
 
         beatmapNameCell.textContent = row["beatmap_name"];
-        modsCell.textContent = row["mods"];
-        rankCell.textContent = row["rank"];
-        removeCell.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
+
+        modsCell.innerHTML = modsToImages(row["mods"]);
+
+        let r = row["rank"]
+        r = r.replace('H', '-Silver')
+        r = r.replace('X', 'SS')
+
+        rankCell.innerHTML = `
+            <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
+        removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
     });
+}
+
+function modsToImages(mods) {
+    // This is hacky, considering rewriting script.js from ground up.
+    const cdn = 'https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/mods/mod_'
+    const template = `<img src="${cdn}MOD.png" width=25px>`
+
+    // TODO: Missing some niche mods like EZ & Flashlight, but I doubt badeu would be using this for now.
+    // I'm being lazy.
+    mods = mods.replace('Hidden', template.replace('MOD', 'hidden'))
+    mods = mods.replace('Double Time', template.replace('MOD', 'double-time'))
+    mods = mods.replace('Nightcore', template.replace('MOD', 'double-time'))
+    mods = mods.replace('Hard Rock', template.replace('MOD', 'hard-rock'))
+
+    mods = mods.replaceAll(',', '')
+
+    return mods
 }
 
 function fetchUserScore(scoreID) {
@@ -76,18 +110,24 @@ function addUserScore(row) {
 
     const scoreLink = document.createElement('a');
     scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + row["score_id"];
-    scoreLink.textContent = row["score_id"];
+    scoreLink.innerHTML = `<i class="fa-solid fa-link"></i>`
     scoreIDCell.appendChild(scoreLink);
 
     const beatmapLink = document.createElement('a');
     beatmapLink.href = row['beatmap_link'];
-    beatmapLink.textContent = row["beatmap_id"];
+    beatmapLink.innerHTML = `<i class="fa-solid fa-map"></i>`;
     beatmapIDCell.appendChild(beatmapLink);
 
     beatmapNameCell.textContent = row["beatmap_name"];
-    modsCell.textContent = row["mods"];
-    rankCell.textContent = row["rank"];
-    removeCell.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
+    modsCell.innerHTML = modsToImages(row["mods"]);
+
+    let r = row["rank"]
+    r = r.replace('H', '-Silver')
+    r = r.replace('X', 'SS')
+
+    rankCell.innerHTML = `
+        <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
+    removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
 }
 
 function removeRow(button) {
@@ -143,6 +183,39 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
         stars.textContent = beatmap['stars'];
         mods.textContent = beatmap['mods'];
     });
+}
 
+/*
+    Function to determine the "difficulty color" based
+    on its star rating.
 
+    Input: star rating int
+    Output: Hex color (ex. #4FC0FF)
+*/
+function getColor(value) {
+    var domain = [0.1, 1.5, 2, 2.5, 3.3, 4.2, 4.9, 5.8, 6.7, 7.7, 9];
+    var range = ['#F5FAFF', '#4FC0FF', '#4FFFD5', '#7CFF4F', '#F6F05C', '#FF8068', '#FF4E6F', '#C645B8', '#6563DE', '#18158E', '#000000'];
+
+    var clampedValue = Math.max(Math.min(value, domain[domain.length - 1]), domain[0]);
+
+    var index = 0;
+    while (clampedValue > domain[index]) {
+      index++;
+    }
+
+    var interpolationFactor = (clampedValue - domain[index - 1]) / (domain[index] - domain[index - 1]);
+
+    var startColor = range[index - 1];
+    var endColor = range[index];
+
+    var startRGB = parseInt(startColor.slice(1), 16);
+    var endRGB = parseInt(endColor.slice(1), 16);
+
+    var interpolatedR = Math.round((1 - interpolationFactor) * (startRGB >> 16) + interpolationFactor * (endRGB >> 16));
+    var interpolatedG = Math.round((1 - interpolationFactor) * ((startRGB >> 8) & 0xFF) + interpolationFactor * ((endRGB >> 8) & 0xFF));
+    var interpolatedB = Math.round((1 - interpolationFactor) * (startRGB & 0xFF) + interpolationFactor * (endRGB & 0xFF));
+
+    var interpolatedColor = '#' + ((1 << 24) + (interpolatedR << 16) + (interpolatedG << 8) + interpolatedB).toString(16).slice(1);
+
+    return interpolatedColor;
 }
