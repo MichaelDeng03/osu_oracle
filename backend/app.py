@@ -7,6 +7,9 @@ from ossapi import Ossapi
 import sqlite3
 import threading
 
+# from pyclustering.cluster.xmeans import xmeans
+from sklearn.cluster import KMeans
+
 sys.path.insert(0, "../")
 from data.classes import Score, Beatmap, Beatmapset
 from osu_access_token import client_id, client_secret
@@ -18,11 +21,12 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load("../Models/w2v_model/w2v_model")
+word2vec_model_std = gensim.models.Word2Vec.load(
+    "../Models/w2v_model_200d/w2v_model_200d"
+)
 NN_std = NearestNeighbors(n_neighbors=100, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
 )
-
 word2vec_model_noHD = gensim.models.Word2Vec.load(
     "../Models/w2v_model_noHD_200d/w2v_model_noHD_200d"
 )
@@ -243,6 +247,7 @@ def predict_beatmaps():
     """
     data = request.json
     noHD = data.get("noHD")
+    detect_skillsets = data.get("detectSkillsets")
     user_scores = data.get("user_scores")
     # Need to decode mod names back to enum
 
@@ -272,31 +277,56 @@ def predict_beatmaps():
     user_scores = [
         score for score in user_scores if score in word2vec_model.wv.index_to_key
     ]
+    user_scores = [tuple(word2vec_model.wv[score]) for score in user_scores]
 
-    user_scores = [word2vec_model.wv[score] for score in user_scores]
-
-    distances, indices = NN.kneighbors([np.mean(user_scores, axis=0)])
-    beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
+    # Cluster user scores so skillsets are not mixed.
+    if detect_skillsets:
+        # xmeans_instance = xmeans(
+        #     data=user_scores,
+        #     initial_centers=None,
+        #     kmax=5,
+        #     tolerance=0.0001    ,
+        #     ccore=True,
+        #     repeat=10,
+        #     random_state=2,
+        # )
+        # xmeans_instance.process()
+        # centers = xmeans_instance.get_centers()
+        kmeans = KMeans(n_clusters=3, n_init=2, max_iter=50)  # Little bit of randomness
+        kmeans.fit(user_scores)
+        centers = kmeans.cluster_centers_
+    else:
+        centers = [np.mean(user_scores, axis=0)]
 
     rows = []
-    for beatmap_and_mods in beatmaps_and_mods:
-        beatmap_id, mods = beatmap_and_mods.split("-")
-        mods = int(mods)
-        mods = mod_enum_to_names(mods)
-        title = get_beatmap_name(beatmap_id)
 
-        rows.append(
-            {
-                "beatmap_id": beatmap_id,
-                "mods": mods,
-                "title": title,
-                "beatmap_link": get_beatmap_link(beatmap_id),
-                "stars": get_beatmap_stars(beatmap_id),
-            }
-        )
+    for center in centers:
+        if len(center) > int(0.05 * len(user_scores)):
+            # Consider it a cluster only if it has more than 5% of the scores
+            row_segment = []
+            center = [np.array(center)]
+            _, indices = NN.kneighbors(center)
+            beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]]
+
+            for beatmap_and_mods in beatmaps_and_mods:
+                beatmap_id, mods = beatmap_and_mods.split("-")
+                mods = int(mods)
+                mods = mod_enum_to_names(mods)
+                title = get_beatmap_name(beatmap_id)
+
+                row_segment.append(
+                    {
+                        "beatmap_id": beatmap_id,
+                        "mods": mods,
+                        "title": title,
+                        "beatmap_link": get_beatmap_link(beatmap_id),
+                        "stars": get_beatmap_stars(beatmap_id),
+                    }
+                )
+            rows.append(row_segment)
 
     return jsonify(rows)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)
