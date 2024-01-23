@@ -1,0 +1,10 @@
+# too chonky to push.
+*.db
+# Removing virtual enviornment & ipynb artifacts.
+venv/
+.ipynb_checkpoints/
+# You'll have to get your own access token. Configuring individual user access tokens is a couple miles down the roadmap. 
+osu_access_token.py 
+*.pyc
+# Slightly too large
+Models/w2v_model*
