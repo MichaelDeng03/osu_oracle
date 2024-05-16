@@ -6,7 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 import sys
 from numpy import array_split
 
-sys.path.insert(0, "../") # I run this script from scraping sometimes so I need to add the parent directory to the path
+sys.path.insert(
+    0, "../"
+)  # I run this script from scraping sometimes so I need to add the parent directory to the path
 from data.classes import User, Score
 from osu_access_token import client_id, client_secret
 
@@ -26,7 +28,6 @@ user_ids = list(set(user_ids) - set(completed_ids))
 num_partitions = 5
 partitioned_user_ids = array_split(user_ids, num_partitions)
 
-# Outside so threads can access
 num_done = 0
 last_time = time.time()
 

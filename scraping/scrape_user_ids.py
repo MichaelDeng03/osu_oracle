@@ -1,3 +1,9 @@
+"""
+Scrapes all user ids from osu leaderboards for all countries.
+Keeps only user_ids with >500pp
+Takes about 80min to run. 
+"""
+
 import json
 import os
 import pickle
@@ -42,5 +48,5 @@ for country_code in country_codes:
         print(e)
 
 
-with open("pickle.leaderboard_ids", "wb") as handle:
+with open("leaderboard_ids.pickle", "wb") as handle:
     pickle.dump(all_ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
