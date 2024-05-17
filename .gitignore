@@ -8,3 +8,4 @@ osu_access_token.py
 *.pyc
 # Slightly too large
 Models/w2v_model*
+osu_oracle_venv
