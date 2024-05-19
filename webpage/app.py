@@ -1,41 +1,44 @@
-from flask import Flask, render_template, jsonify, request
+import sqlite3
 import sys
-from sklearn.neighbors import NearestNeighbors
+import threading
+from datetime import datetime
+from time import gmtime, strftime
+
 import gensim
 import numpy as np
+from flask import Flask, jsonify, render_template, request
 from ossapi import Ossapi
-import sqlite3
-import threading
-from time import strftime
-from time import gmtime
 
 # from pyclustering.cluster.xmeans import xmeans
 from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, "../")
-from data.classes import Score, Beatmap, Beatmapset, User
-from osu_access_token import client_id, client_secret
+import os
+
+from data.classes import Beatmap, Beatmapset, Score, User
+
+OSU_CLIENT_ID = os.environ.get("OSU_CLIENT_ID")
+OSU_CLIENT_SECRET = os.environ.get("OSU_CLIENT_SECRET")
 
 app = Flask(__name__)
-api = Ossapi(client_id, client_secret)
+api = Ossapi(OSU_CLIENT_ID, OSU_CLIENT_SECRET)
 conn = sqlite3.connect(
-    "../data/osu.db", check_same_thread=False
+    "../data/UserScores.db", check_same_thread=False
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_15d_50e/w2v_model_15d_50e"
-)
+word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_1.model")
 NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
 )
 
-word2vec_model_noHD = gensim.models.Word2Vec.load(
-    "../Models/w2v_model_noHD_15d_50e/w2v_model_noHD_15d_50e"
-)
-NN_noHD = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
-    word2vec_model_noHD.wv.vectors
-)
+# word2vec_model_noHD = gensim.models.Word2Vec.load(
+#     "../Models/w2v_model_noHD_15d_50e/w2v_model_noHD_15d_50e"
+# )
+# NN_noHD = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
+#     word2vec_model_noHD.wv.vectors
+# )
 
 
 mod_enums_list = [
@@ -146,59 +149,142 @@ def get_beatmap_attr(beatmap_id, attr):
         return attr_res
 
 
-def get_beatmap_title_and_link(beatmap_id):
+def get_beatmap_title_and_version(beatmap_id):
     """
-    Returns {title: title, beatmap_link: beatmap_link}
+    Returns (title, version)
     """
-    conn = sqlite3.connect("../data/osu.db")
+    conn = sqlite3.connect("../data/UserScores.db")
     cursor = conn.cursor()
     try:
-        query = f"SELECT version, beatmapset_id FROM beatmaps WHERE beatmap_id = {beatmap_id}"
+        query = f"SELECT version, beatmapset_id FROM beatmaps_std WHERE beatmap_id = {beatmap_id}"
         cursor.execute(query)
-        version, beatmapset_id = cursor.fetchone()
-        query = f"SELECT title FROM beatmapsets WHERE beatmapset_id = {beatmapset_id}"
-        title = cursor.execute(query).fetchone()[0]
+        result = cursor.fetchone()
+        if result:
+            version, beatmapset_id = result
+        else:
+            # If not found, fetch from API and insert
+            beatmap = api.beatmap(beatmap_id)
+
+            accuracy = getattr(beatmap, "accuracy", None)
+            ar = getattr(beatmap, "ar", None)
+            beatmap_id = beatmap_id  # no shit
+            beatmapset_id = getattr(beatmap, "beatmapset_id", None)
+            bpm = getattr(beatmap, "bpm", None)
+            cs = getattr(beatmap, "cs", None)
+            difficulty_rating = getattr(beatmap, "difficulty_rating", None)
+            drain = getattr(beatmap, "drain", None)
+            max_combo = getattr(beatmap, "max_combo", None)
+            owner_user_id = getattr(beatmap, "owner_user_id", None)
+            total_length = getattr(beatmap, "total_length", None)
+            url = getattr(beatmap, "url", None)
+            version = getattr(beatmap, "version", None)
+
+            beatmap = (
+                accuracy,
+                ar,
+                beatmap_id,
+                beatmapset_id,
+                bpm,
+                cs,
+                difficulty_rating,
+                drain,
+                max_combo,
+                owner_user_id,
+                total_length,
+                url,
+                version,
+            )
+
+            lock.acquire()
+            cursor.execute(
+                """
+                INSERT INTO beatmaps_std (
+                accuracy, ar, beatmap_id, beatmapset_id, bpm, cs, 
+                difficulty_rating, drain, max_combo, owner_user_id, 
+                total_length, url, version) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                beatmap,
+            )
+            conn.commit()
+            lock.release()
+
+        query = (
+            f"SELECT title FROM beatmapsets_std WHERE beatmapset_id = {beatmapset_id}"
+        )
+        cursor.execute(query)
+        result = cursor.fetchone()
+        if result:
+            title = result[0]
+        else:
+            # If not found, fetch from API and insert
+            beatmapset = api.beatmapset(beatmapset_id)
+
+            lock.acquire()
+            beatmapset.insert(cursor)
+            conn.commit()
+            lock.release()
+
+            title = beatmapset.title
 
     except Exception as e:
-        print(e)
-        beatmap = Beatmap(api.beatmap(beatmap_id))
-        beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
-
-        lock.acquire()
-        beatmap.insert(cursor)
-        beatmapset.insert(cursor)
-        conn.commit()
-        lock.release()
-        title = beatmapset.title
-        version = beatmap.version
-        beatmapset_id = beatmap.beatmapset_id
+        print(f"Error retrieving beatmap/beatmapset information: {e}")
+        return None, None
 
     finally:
-        return {
-            "title": f"{title} [{version}]",
-            "beatmap_link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
-        }
+        conn.close()
+        return title, version
 
 
-@app.route("/get_user_scores/<int:user_id>")
-def get_user_scores(user_id):
+@app.route("/get_user_top_scores/<int:user_id>")
+def get_user_top_scores(user_id):
     """
     Gets top 100 scores for user_id, returns a jsonified list of dictionaries for frontend
     """
     try:
         top_scores = api.user_scores(user_id, type="best", mode="osu", limit=100)
         scores = []
-        for score in top_scores:
-            try:
-                score = Score(score)
-                scores.append(score)
-            except Exception as e:
-                print(f"Error creating score object: {e}")
-                continue
-
     except Exception as e:
         print(e)
-        return None
+
+    for score in top_scores:
+        try:
+            beatmap = getattr(score, "beatmap", None)
+            beatmap_id = getattr(beatmap, "id", None) if beatmap else None
+
+            beatmapset_id = getattr(beatmap, "beatmapset_id", None) if beatmap else None
+
+            mods = getattr(score, "mods", None)
+            mods = getattr(mods, "value", None) if mods else None
+
+            pp = getattr(score, "pp", None)
+
+            created_at = getattr(score, "created_at", None)
+            created_at = (
+                datetime.strftime(created_at, "%Y-%m-%d %H:%M:%S")
+                if created_at
+                else None
+            )
+
+            title, version = get_beatmap_title_and_version(beatmap_id)
+
+            score = {
+                "user_id": user_id,
+                "beatmap_id": beatmap_id,
+                "beatmapset_id": beatmapset_id,
+                "pp": pp,
+                "mods": mods,
+                "created_at": created_at,
+                "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
+                "title": title,
+                "version": version,
+            }
+
+            scores.append(score)
+
+        except Exception as e:
+            print(e)
+            continue
 
     rows = []
     for score in scores:
