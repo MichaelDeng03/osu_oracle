@@ -9,3 +9,4 @@ osu_access_token.py
 # Slightly too large
 Models/w2v_model*
 osu_oracle_venv
+*.db-journal

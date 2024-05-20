@@ -29,50 +29,54 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fetchUserTopScores(userID) {
-    fetch('/get_user_scores/' + userID)
-        .then(response => response.json())
-        .then(data => addUserTopScores(data))
-        .catch(error => console.log("Error: " + error));
+    fetch('/get_user_top_scores/' + userID)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            if (Array.isArray(data)) {
+                addUserTopScores(data);
+            } else {
+                console.log("Expected an array of scores, received something else:", data);
+            }
+        })
+        .then(() => console.log('test1'))
+        .catch(error => console.log("Error:", error));
 }
 
-function addUserTopScores(scoreRows) {
+function addUserTopScores(scores) {
+    console.log('test')
     const tableBody = document.getElementById('scoresTableBody');
     tableBody.innerHTML = '';
-
-    scoreRows.forEach(row => {
+    
+    scores.forEach(score => {
         const newRow = tableBody.insertRow(-1);
 
-        const scoreIDCell = newRow.insertCell(0);
-        // const beatmapIDCell = newRow.insertCell(1);
+        const beatmapThumbnailCell = newRow.insertCell(0);
         const beatmapNameCell = newRow.insertCell(1);
         const modsCell = newRow.insertCell(2);
-        const rankCell = newRow.insertCell(3);
-        const removeCell = newRow.insertCell(4);
 
-        const scoreLink = document.createElement('a');
-        scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + row["score_id"];
-        scoreLink.innerHTML = `<i class="fa-solid fa-link"></i>`
-        scoreLink.target = "_blank"; // open in new tab
-        scoreIDCell.appendChild(scoreLink);
-
+        beatmapThumbnailCell.innerHTML = `<img src="${score['list_2x_url']} width="40" height="40">`;
+        
         const beatmapLink = document.createElement('a');
-        beatmapLink.href = row['beatmap_link'];
-        beatmapLink.innerHTML = row["title"];
+        beatmapLink.href = score['link'];
+        beatmapLink.textContent = `${score['title']} [${score['version']}]`;; 
         beatmapLink.target = "_blank";
-        // beatmapIDCell.appendChild(beatmapLink);
 
-        // beatmapNameCell.textContent = row["beatmap_name"];
         beatmapNameCell.appendChild(beatmapLink);
-        modsCell.innerHTML = modsToImages(row["mods"]);
-        modsCell.setAttribute('mods', row["mods"]);
+        // modsCell.innerHTML = modsToImages(row["mods"]);
+        // modsCell.setAttribute('mods', row["mods"]);
 
-        let r = row["rank"]
-        r = r.replace('H', '-Silver')
-        r = r.replace('X', 'SS')
+        // let r = row["rank"]
+        // r = r.replace('H', '-Silver')
+        // r = r.replace('X', 'SS')
 
-        rankCell.innerHTML = `
-            <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
-        removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
+        // rankCell.innerHTML = `
+        //     <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
+        // removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
     });
 }
 
@@ -101,43 +105,36 @@ function fetchUserScore(scoreID) {
         .catch(error => console.log("Error: " + error));
 }
 
-function addUserScore(row) {
+function addUserScore(score) {
     const tableBody = document.getElementById('scoresTableBody');
     const newRow = tableBody.insertRow(-1);
 
-    const scoreIDCell = newRow.insertCell(0);
-    // const beatmapIDCell = newRow.insertCell(1);
+    const beatmapThumbnailCell = newRow.insertCell(0);
     const beatmapNameCell = newRow.insertCell(1);
     const modsCell = newRow.insertCell(2);
-    const rankCell = newRow.insertCell(3);
-    const removeCell = newRow.insertCell(4);
 
-    const scoreLink = document.createElement('a');
-    scoreLink.href = 'https://osu.ppy.sh/scores/osu/' + row["score_id"];
-    scoreLink.innerHTML = `<i class="fa-solid fa-link"></i>`
-    scoreLink.target = "_blank"; // open in new tab
-    scoreIDCell.appendChild(scoreLink);
-
+    beatmapThumbnailCell.innerHTML = `<img src="${score['list_2x_url']} width="40" height="40">`;
+    
     const beatmapLink = document.createElement('a');
-    beatmapLink.href = row['beatmap_link'];
-    beatmapLink.innerHTML = row["title"];
+    beatmapLink.href = score['link'];
+    beatmapLink.textContent = `${score['title']} [${score['version']}]`;; 
     beatmapLink.target = "_blank";
-    // beatmapIDCell.appendChild(beatmapLink);
 
-    // beatmapNameCell.textContent = row["beatmap_name"];
     beatmapNameCell.appendChild(beatmapLink);
-    modsCell.innerHTML = modsToImages(row["mods"]);
-    modsCell.setAttribute('mods', row["mods"]);
 
-    let r = row["rank"]
-    let original = row["rank"]
-    r = r.replace('H', '-Silver')
-    r = r.replace('X', 'SS')
+    // beatmapNameCell.appendChild(beatmapLink);
+    // modsCell.innerHTML = modsToImages(row["mods"]);
+    // modsCell.setAttribute('mods', row["mods"]);
 
-    rankCell.innerHTML = `
-        <img
-            src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
-    removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
+    // let r = row["rank"]
+    // let original = row["rank"]
+    // r = r.replace('H', '-Silver')
+    // r = r.replace('X', 'SS')
+
+    // rankCell.innerHTML = `
+    //     <img
+    //         src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
+    // removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
 }
 
 function removeRow(button) {

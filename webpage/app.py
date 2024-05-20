@@ -120,47 +120,18 @@ def home():
     return render_template("index.html")
 
 
-def get_beatmap_attr(beatmap_id, attr):
+def get_beatmap_info(beatmap_id):
     """
-    attr: list of attributes to get
-    returns: dictionary of attributes
-    """
-    conn = sqlite3.connect("../data/osu.db")
-    cursor = conn.cursor()
-    try:
-        query = f"SELECT {','.join(attr)} FROM beatmaps WHERE beatmap_id = {beatmap_id}"
-        attr_res = cursor.execute(query).fetchone()
-        attr_res = {attr[i]: attr_res[i] for i in range(len(attr))}
-    except Exception as e:
-        print(e)
-        beatmap = Beatmap(api.beatmap(beatmap_id))
-        beatmapset = Beatmapset(api.beatmapset(beatmap.beatmapset_id))
-
-        lock.acquire()
-        beatmap.insert(cursor)
-        beatmapset.insert(cursor)
-        conn.commit()
-        lock.release()
-
-        query = f"SELECT {','.join(attr)} FROM beatmaps WHERE beatmap_id = {beatmap_id}"
-        attr_res = cursor.execute(query).fetchone()
-        attr_res = {attr[i]: attr_res[i] for i in range(len(attr))}
-    finally:
-        return attr_res
-
-
-def get_beatmap_title_and_version(beatmap_id):
-    """
-    Returns (title, version)
+    Returns a dictionary containing beatmap info for version, title, bpm, ar, total_length, and difficulty_rating, beatmapset_id, list_2x_url, and link
     """
     conn = sqlite3.connect("../data/UserScores.db")
     cursor = conn.cursor()
     try:
-        query = f"SELECT version, beatmapset_id FROM beatmaps_std WHERE beatmap_id = {beatmap_id}"
+        query = f"SELECT version, bpm, ar, total_length, difficulty_rating, beatmapset_id FROM beatmaps_std WHERE beatmap_id = {beatmap_id}"
         cursor.execute(query)
         result = cursor.fetchone()
         if result:
-            version, beatmapset_id = result
+            version, bpm, ar, total_length, difficulty_rating, beatmapset_id = result
         else:
             # If not found, fetch from API and insert
             beatmap = api.beatmap(beatmap_id)
@@ -209,31 +180,71 @@ def get_beatmap_title_and_version(beatmap_id):
             conn.commit()
             lock.release()
 
-        query = (
-            f"SELECT title FROM beatmapsets_std WHERE beatmapset_id = {beatmapset_id}"
-        )
+        query = f"SELECT title, list_2x_url, artist, creator, language, genre FROM beatmapsets_std WHERE beatmapset_id = {beatmapset_id}"
         cursor.execute(query)
         result = cursor.fetchone()
         if result:
-            title = result[0]
+            title, list_2x_url, artist, creator, language, genre = result
         else:
             # If not found, fetch from API and insert
             beatmapset = api.beatmapset(beatmapset_id)
+            artist = getattr(beatmapset, "artist", None)
+            creator = getattr(beatmapset, "creator", None)
+            genre = getattr(beatmapset, "genre", None)
+            genre = getattr(genre, "name", None)
+
+            language = getattr(beatmapset, "language", None)
+            language = getattr(language, "name", None)
+
+            covers = getattr(beatmapset, "covers", None)
+            list_2x_url = getattr(covers, "list_2x", None) if covers else None
+
+            preview_url = getattr(beatmapset, "preview_url", None)
+            title = getattr(beatmapset, "title", None)
+
+            beatmapset = (
+                int(beatmapset_id),
+                artist,
+                creator,
+                genre,
+                language,
+                list_2x_url,
+                preview_url,
+                title,
+            )
+
+            query = """
+            INSERT INTO beatmapsets_std 
+            (beatmapset_id, artist, creator, genre, language, list_2x_url, preview_url, title) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """
 
             lock.acquire()
             beatmapset.insert(cursor)
             conn.commit()
             lock.release()
 
-            title = beatmapset.title
-
     except Exception as e:
-        print(f"Error retrieving beatmap/beatmapset information: {e}")
-        return None, None
+        print(f"Error retrieving beatmapset information: {e}")
+        return None
 
     finally:
         conn.close()
-        return title, version
+        return {
+            "title": title,
+            "version": version,
+            "bpm": bpm,
+            "ar": ar,
+            "total_length": total_length,
+            "difficulty_rating": difficulty_rating,
+            "beatmapset_id": beatmapset_id,
+            "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
+            "list_2x_url": list_2x_url,
+            "artist": artist,
+            "creator": creator,
+            "language": language,
+            "genre": genre,
+        }
 
 
 @app.route("/get_user_top_scores/<int:user_id>")
@@ -266,8 +277,6 @@ def get_user_top_scores(user_id):
                 else None
             )
 
-            title, version = get_beatmap_title_and_version(beatmap_id)
-
             score = {
                 "user_id": user_id,
                 "beatmap_id": beatmap_id,
@@ -276,8 +285,6 @@ def get_user_top_scores(user_id):
                 "mods": mods,
                 "created_at": created_at,
                 "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
-                "title": title,
-                "version": version,
             }
 
             scores.append(score)
@@ -286,28 +293,11 @@ def get_user_top_scores(user_id):
             print(e)
             continue
 
-    rows = []
     for score in scores:
-        rows.append(
-            {
-                "score_id": score.score_id,
-                "beatmap_id": score.beatmap_id,
-                "mods": mod_enum_to_names(score.mods),
-                "rank": score.rank,
-            }
-        )
-        rows[-1].update(get_beatmap_title_and_link(score.beatmap_id))
+        score.update(get_beatmap_info(score["beatmap_id"]))
 
-    try:
-        for score in scores:
-            cursor = conn.cursor()
-            score.insert(cursor)
-            conn.commit()
-    except Exception as e:
-        print(e)
-        print("Error inserting scores into db")
-
-    return jsonify(rows)
+    print(scores[0])
+    return jsonify(scores)
 
 
 @app.route("/get_user_score/<int:score_id>")
@@ -315,20 +305,40 @@ def get_user_score(score_id):
     """
     Gets score info for score_id, returns a jsonified dictionary for frontend. Almost the same as get_user_scores, but only one score.
     """
-    score = Score(api.score("osu", score_id))
+    score = api.score("osu", score_id)
+    try:
+        user_id = getattr(score, "user_id", None)
 
-    row = {
-        "score_id": score.score_id,
-        "mods": mod_enum_to_names(score.mods),
-        "rank": score.rank,
-    }
-    row.update(get_beatmap_title_and_link(score.beatmap_id))
+        beatmap = getattr(score, "beatmap", None)
+        beatmap_id = getattr(beatmap, "id", None) if beatmap else None
 
-    cursor = conn.cursor()
-    score.insert(cursor)
-    conn.commit()
+        beatmapset_id = getattr(beatmap, "beatmapset_id", None) if beatmap else None
 
-    return jsonify(row)
+        mods = getattr(score, "mods", None)
+        mods = getattr(mods, "value", None) if mods else None
+
+        pp = getattr(score, "pp", None)
+
+        created_at = getattr(score, "created_at", None)
+        created_at = (
+            datetime.strftime(created_at, "%Y-%m-%d %H:%M:%S") if created_at else None
+        )
+
+        score = {
+            "user_id": user_id,
+            "beatmap_id": beatmap_id,
+            "beatmapset_id": beatmapset_id,
+            "pp": pp,
+            "mods": mods,
+            "created_at": created_at,
+            "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
+        }
+    except Exception as e:
+        print(e)
+
+    score.update(get_beatmap_info(score["beatmap_id"]))
+
+    return jsonify(score)
 
 
 @app.route("/predict_beatmaps/", methods=["POST"])
