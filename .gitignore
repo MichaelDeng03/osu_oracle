@@ -11,3 +11,4 @@ Models/w2v_model*
 osu_oracle_venv
 *.db-journal
 *.parquet
+*.model
