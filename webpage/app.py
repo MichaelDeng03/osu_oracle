@@ -28,7 +28,7 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_1.model")
+word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_3.model")
 
 NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
@@ -107,6 +107,11 @@ def mod_names_to_enum(mod_names):
 @app.route("/wip")
 def wip():
     return render_template("wip.html")
+
+
+@app.route("/help")
+def help():
+    return render_template("help.html")
 
 
 @app.route("/")
@@ -272,6 +277,26 @@ def mods_enum_to_image_url(mods_enum):
     return images
 
 
+def update_mods(mods_enum, keepHD=True):
+    """
+    Returns a mods_enum with some mods removed.
+    """
+    NF = 1
+    HD = 8  # Removed only for no HD
+    SD = 32
+    DT = 64
+    NC = 512
+    SO = 4096
+    PF = 16384
+    SV2 = 536870912
+    if keepHD:
+        mods_removed = NF | SD | SO | PF | SV2 | NC
+    else:
+        mods_removed = NF | SD | HD | SO | PF | SV2 | NC
+
+    return mods_enum & ~mods_removed
+
+
 @app.route("/get_user_top_scores/<int:user_id>")
 def get_user_top_scores(user_id):
     """
@@ -322,6 +347,9 @@ def get_user_top_scores(user_id):
         score.update(get_beatmap_info(score["beatmap_id"]))
 
     for score in scores:
+        score["mods"] = update_mods(score["mods"])
+
+    for score in scores:
         score["mods_images"] = mods_enum_to_image_url(score["mods"])
 
     return jsonify(scores)
@@ -348,7 +376,7 @@ def get_beatmap(beatmap_id):
             "mods_images": mods_images,
             "list_2x_url": list_2x_url,
             "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset.id}#osu/{beatmap_id}",
-            "mods": mods_enum,
+            "mods": update_mods(mods_enum),
         }
     )
 
@@ -368,7 +396,8 @@ def predict_beatmaps():
     top_scores_vec = [model.wv[score] for score in user_scores if score in model.wv]
 
     # Clustering the score vectors
-    num_clusters = min(10, len(top_scores_vec))
+    # num_clusters = min(10, len(top_scores_vec))
+    num_clusters = min(1, (len(top_scores_vec) // 10) + 1)
     if num_clusters > 1:
         kmeans = KMeans(n_clusters=num_clusters)
         kmeans.fit(top_scores_vec)
