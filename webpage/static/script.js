@@ -166,6 +166,9 @@ function removeRow(button) {
 }
 
 function fetchRecommendedBeatmaps() {
+    //clear recommended beatmaps table
+    const tableBody = document.getElementById('recommendedBeatmapsBody');
+    tableBody.innerHTML = '';
     const userScores = document.getElementById('scoresTableBody').rows;
     const userScoresArray = [];
 
@@ -174,6 +177,7 @@ function fetchRecommendedBeatmaps() {
         
         const mods_enum = userScores[i].cells[3].textContent; 
 
+        console.log(bm_id, mods_enum);
         userScoresArray.push(bm_id + '-' + mods_enum);
     }
 

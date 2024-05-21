@@ -347,6 +347,8 @@ def get_beatmap(beatmap_id):
             "version": version,
             "mods_images": mods_images,
             "list_2x_url": list_2x_url,
+            "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset.id}#osu/{beatmap_id}",
+            "mods": mods_enum,
         }
     )
 
