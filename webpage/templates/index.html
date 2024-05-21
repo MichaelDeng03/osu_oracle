@@ -47,29 +47,9 @@
     </nav>
     <div class="container-fluid col-md-11">
         <div class="row">
-            <!--
-                Score population, left-hand side.
-            -->
             <div class="section col-md-5">
-                <h1>Scores</h1>
+                <h1>Maps </h1>
                 <div class="section-color">
-                    <!--
-                    Populate your scores with either your user id, or with individual scores (or both). Both values are the
-                    number ONLY. If you were me https://osu.ppy.sh/users/28956125, then you would enter 28956125. For individual
-                    scores, hit the three vertical dots then view details. My top play is
-                    https://osu.ppy.sh/scores/osu/4470046750, so I would enter 4470046750. Due to my ineptitude you'll have to
-                    refresh the page to clear your recommended beatmaps.
-                -->
-
-                    <p class="section-description">
-                        This section is used to specify maps to base your recommendations on.
-                        This can be done by fetching your top plays from your profile link, or submitting individual
-                        score links.
-                        <br> Recommender DOES NOT take into account stuff like acc or misses, ONLY the beatmap and mods.
-                        This can be useful for recommending similar maps to a map you just played, even if you are bad
-                        and can't FC.
-                    </p>
-
                     <label for="userID">Profile URL</label>
                     <input type="text" class="form-control" id="userID" placeholder="https://osu.ppy.sh/users/29912986">
                     <button type="submit" id="submitUserID" class="btn btn-primary section-submit">Fetch Top
@@ -77,11 +57,63 @@
 
                     <br>
 
-                    <label for="scoreID">Score URL</label>
-                    <input type="text" class="form-control" id="scoreID"
-                        placeholder="https://osu.ppy.sh/scores/osu/4470046750">
-                    <button type="submit" id="submitScoreID" class="btn btn-primary section-submit">Fetch
-                        Score</button>
+                    <label for="scoreID">Beatmap URL</label>
+                    <input type="text" class="form-control" id="beatmapURL"
+                        placeholder="https://osu.ppy.sh/beatmapsets/1011341#osu/2116802">
+                    <div class="modifiers">
+                        <div>
+                            <input type="checkbox" id="easy" name="mod" value=2>
+                            <label for="easy"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_easy.png"
+                                    alt="Easy"> Easy</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="touchDevice" name="mod" value=4>
+                            <label for="touchDevice"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_touchdevice.png"
+                                    alt="TouchDevice"> TouchDevice</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="hidden" name="mod" value=8>
+                            <label for="hidden"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_hidden.png"
+                                    alt="Hidden"> Hidden</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="hardRock" name="mod" value=16>
+                            <label for="hardRock"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_hard-rock.png"
+                                    alt="HardRock"> HardRock</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="doubleTime" name="mod" value=64>
+                            <label for="doubleTime"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_double-time.png"
+                                    alt="DoubleTime"> DoubleTime</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="relax" name="mod" value=128>
+                            <label for="relax"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_relax.png"
+                                    alt="Relax"> Relax</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="halfTime" name="mod" value=256>
+                            <label for="halfTime"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_half.png"
+                                    alt="HalfTime"> HalfTime</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="flashLight" name="mod" value=1024>
+                            <label for="flashLight"><img
+                                    src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_flashlight.png"
+                                    alt="FlashLight"> FlashLight</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBeatmap" class="btn btn-primary section-submit">Fetch
+                        Beatmap</button>
+                    <button type="button" id="clearTable" class="btn btn-danger section-submit">Clear Table</button>
 
                     <table class="table table-dark table-striped" id="scoresTable">
                         <thead>
@@ -105,29 +137,15 @@
                 <div class="section-color">
 
                     <p class="section-description">
-                        This section will recommend beatmaps based on submitted scores.
-                        <br> Removing HD will change recommendations beyond just stripping HD from recommend maps (its
-                        trained on a model with HD removed). Good for players who think that HD is a preference/comfort
-                        mod.
-                        <br> Detect skillsets will (attempt) to
-                        separate your submitted scores into different skillsets (not technically accurate), and
-                        recommend maps for each of them
-                        divided by horizontal line. HIGHLY HIGHLY HIGHLY HIGHLY RECOMMENDED (higher usually better, but
-                        i haven't removed duplicates so.....).
                     </p>
 
                     <button id="recommendBeatmaps" class="btn btn-success section-submit">Recommend Beatmaps</button>
-                    <input type="checkbox" id="noHD" name="noHD" value="noHD">
-                    <label for="noHD">Remove HD</label>
-                    <input type="checkbox" id="detectSkillsets" name="detectSkillsets" value="detectSkillsets">
-                    <label for="detectSkillsets">Detect Skillsets</label>
-                    <input type="number" id="numSkillsets" name="numSkillsets" min="2" max="50" value="10">
-                    <label for="numSkillsets">Number of Skillsets</label>
 
                     <div>
                         <table class="table table-dark table-striped" id="recommendedBeatmaps">
                             <thead>
                                 <tr>
+                                    <th> </th>
                                     <th> Map </th>
                                     <th> Stars </th>
                                     <th> AR </th>

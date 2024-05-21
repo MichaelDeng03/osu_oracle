@@ -73,6 +73,20 @@ h1 {
 
 }
 
+.modifiers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.modifiers div {
+    display: flex;
+    align-items: center;
+}
+
+input[type="checkbox"] {
+    margin-right: 5px;
+}
 
 .header-color {
     background-color: red;

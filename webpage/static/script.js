@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userID = document.getElementById('userID');
     const submitUserID = document.getElementById('submitUserID');
-    const scoreID = document.getElementById('scoreID');
-    const submitScoreID = document.getElementById('submitScoreID');
+    const beatmapURL = document.getElementById('beatmapURL');
+    const submitBeatmap = document.getElementById('submitBeatmap');
     const getRecommendedBeatmaps = document.getElementById('recommendBeatmaps');
 
     /*
@@ -12,19 +12,33 @@ document.addEventListener('DOMContentLoaded', () => {
     submitUserID.addEventListener('click', () => {
         const regex = /\/users\/(\d+)/;
         const match = userID.value.match(regex);
-
-        fetchUserTopScores(match[1]);
+        if (match && match[1]) {
+            console.log(match[1]);
+            fetchUserTopScores(match[1]);
+        } else {
+            console.error("Invalid URL format");
+        }
     });
 
-    submitScoreID.addEventListener('click', () => {
-        const regex = /\/(\d+)$/;
-        const match = scoreID.value.match(regex);
 
-        fetchUserScore(match[1]);
+    submitBeatmap.addEventListener('click', () => {
+        const regex = /#osu\/(\d+)$/;
+        const match = beatmapURL.value.match(regex);
+        if (match && match[1]) {
+            console.log(match[1]);
+            fetchBeatmap(match[1]);
+        } else {
+            console.error("Invalid URL format");
+        }
     });
 
     getRecommendedBeatmaps.addEventListener('click', () => {
         fetchRecommendedBeatmaps();
+    });
+
+    document.getElementById('clearTable').addEventListener('click', function() {
+        const tableBody = document.getElementById('scoresTableBody');
+        tableBody.innerHTML = '';  // Clears all rows from the table body
     });
 });
 
@@ -43,12 +57,10 @@ function fetchUserTopScores(userID) {
                 console.log("Expected an array of scores, received something else:", data);
             }
         })
-        .then(() => console.log('test1'))
         .catch(error => console.log("Error:", error));
 }
 
 function addUserTopScores(scores) {
-    console.log('test')
     const tableBody = document.getElementById('scoresTableBody');
     tableBody.innerHTML = '';
     
@@ -58,6 +70,8 @@ function addUserTopScores(scores) {
         const beatmapThumbnailCell = newRow.insertCell(0);
         const beatmapNameCell = newRow.insertCell(1);
         const modsCell = newRow.insertCell(2);
+        const modEnumCell = newRow.insertCell(3); // Hidden cell for mod_enum
+        const removeCell = newRow.insertCell(4);
 
         beatmapThumbnailCell.innerHTML = `<img src="${score['list_2x_url']} width="40" height="40">`;
         
@@ -65,77 +79,86 @@ function addUserTopScores(scores) {
         beatmapLink.href = score['link'];
         beatmapLink.textContent = `${score['title']} [${score['version']}]`;; 
         beatmapLink.target = "_blank";
+        beatmapNameCell.appendChild(beatmapLink)
 
-        beatmapNameCell.appendChild(beatmapLink);
-        // modsCell.innerHTML = modsToImages(row["mods"]);
-        // modsCell.setAttribute('mods', row["mods"]);
+        if (score["mods_images"]) {
+            score["mods_images"].forEach(imgUrl => {
+                const modImage = document.createElement('img');
+                modImage.src = imgUrl;
+                modImage.style.width = "25px"; // Set the width of mod images
+                modImage.style.height = "18px"; // Set the height of mod images
+                modImage.style.marginRight = "3px"; // Add some spacing between images
+                modImage.style.verticalAlign = "middle"; // Align images vertically
+                modsCell.appendChild(modImage);
+            });
+        }
+        modEnumCell.style.display = "none"; // Hide the cell
+        modEnumCell.textContent = score['mods']; // Store mod_enum in the cell
 
-        // let r = row["rank"]
-        // r = r.replace('H', '-Silver')
-        // r = r.replace('X', 'SS')
-
-        // rankCell.innerHTML = `
-        //     <img src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
-        // removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
+        modsCell.style.whiteSpace = "nowrap"; // Prevent wrapping to a new line
+        
+        removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
     });
 }
 
-function modsToImages(mods) {
-    // This is hacky, considering rewriting script.js from ground up.
-    const cdn = 'https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/mods/mod_'
-    const template = `<img src="${cdn}MOD.png" original="ORIGINAL" width=25px>`
 
-    // I'm being lazy.
-    mods = mods.replace('Hidden', template.replace('MOD', 'hidden'))
-    mods = mods.replace('Double Time', template.replace('MOD', 'double-time'))
-    mods = mods.replace('Nightcore', template.replace('MOD', 'nightcore.png'))
-    mods = mods.replace('Hard Rock', template.replace('MOD', 'hard-rock'))
-    mods = mods.replace('Flashlight', template.replace('MOD', 'flashlight'))
-    mods = mods.replace('Easy', template.replace('MOD', 'easy'))
-    // mods = mods.replace('Half Time', template.replace('MOD', 'half-time')) bruh i cna't be bothered.
-    mods = mods.replaceAll(',', '')
+function fetchBeatmap(beatmapID) {
+    // Calculate mods enumeration from checked checkboxes
+    const modifiers = document.querySelectorAll('.modifiers input[type="checkbox"]:checked');
+    let modsEnum = 0;
+    modifiers.forEach(mod => {
+        modsEnum += parseInt(mod.value);
+    });
 
-    return mods
-}
+    // Construct the URL with both beatmapID and modsEnum as query parameters
+    const url = `/get_beatmap/${beatmapID}?modsEnum=${modsEnum}`;
 
-function fetchUserScore(scoreID) {
-    fetch('/get_user_score/' + scoreID)
+    fetch(url)
         .then(response => response.json())
-        .then(data => addUserScore(data))
+        .then(data => addBeatmap(data))
         .catch(error => console.log("Error: " + error));
 }
 
-function addUserScore(score) {
+function addBeatmap(score) {
+    //mods are already in url suffix format
     const tableBody = document.getElementById('scoresTableBody');
     const newRow = tableBody.insertRow(-1);
 
-    const beatmapThumbnailCell = newRow.insertCell(0);
-    const beatmapNameCell = newRow.insertCell(1);
-    const modsCell = newRow.insertCell(2);
+        const beatmapThumbnailCell = newRow.insertCell(0);
+        const beatmapNameCell = newRow.insertCell(1);
+        const modsCell = newRow.insertCell(2);
+        const modEnumCell = newRow.insertCell(3); // Hidden cell for mod_enums
+        const removeCell = newRow.insertCell(4);
 
-    beatmapThumbnailCell.innerHTML = `<img src="${score['list_2x_url']} width="40" height="40">`;
-    
-    const beatmapLink = document.createElement('a');
-    beatmapLink.href = score['link'];
-    beatmapLink.textContent = `${score['title']} [${score['version']}]`;; 
-    beatmapLink.target = "_blank";
+        beatmapThumbnailCell.innerHTML = `<img src="${score['list_2x_url']} width="40" height="40">`;
+        
+        const beatmapLink = document.createElement('a');
+        beatmapLink.href = score['link'];
+        beatmapLink.textContent = `${score['title']} [${score['version']}]`;; 
+        beatmapLink.target = "_blank";
+        beatmapNameCell.appendChild(beatmapLink)
 
-    beatmapNameCell.appendChild(beatmapLink);
+        if (score["mods_images"]) {
+            score["mods_images"].forEach(imgUrl => {
+                const modImage = document.createElement('img');
+                modImage.src = imgUrl;
+                modImage.style.width = "25px"; // Set the width of mod images
+                modImage.style.height = "18px"; // Set the height of mod images
+                modImage.style.marginRight = "3px"; // Add some spacing between images
+                modImage.style.verticalAlign = "middle"; // Align images vertically
+                modsCell.appendChild(modImage);
+            });
+        }
+        
+        modEnumCell.style.display = "none"; // Hide the cell
+        modEnumCell.textContent = score['mods']; // Store mod_enum in the cell
 
-    // beatmapNameCell.appendChild(beatmapLink);
-    // modsCell.innerHTML = modsToImages(row["mods"]);
-    // modsCell.setAttribute('mods', row["mods"]);
-
-    // let r = row["rank"]
-    // let original = row["rank"]
-    // r = r.replace('H', '-Silver')
-    // r = r.replace('X', 'SS')
-
-    // rankCell.innerHTML = `
-    //     <img
-    //         src="https://raw.githubusercontent.com/ppy/osu-web/459ef4ad903647aef0daf6d4a24f4eb5fe436e4c/public/images/badges/score-ranks-v2019/GradeSmall-${r}.svg">`
-    // removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
+        modsCell.style.whiteSpace = "nowrap"; // Prevent wrapping to a new line
+        
+        removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
 }
+
+
 
 function removeRow(button) {
     const row = button.parentNode.parentNode;
@@ -144,23 +167,20 @@ function removeRow(button) {
 
 function fetchRecommendedBeatmaps() {
     const userScores = document.getElementById('scoresTableBody').rows;
-    const noHD = document.getElementById('noHD').checked;
-    const detectSkillsets = document.getElementById('detectSkillsets').checked;
-    const numSkillsets = document.getElementById('numSkillsets').value;
     const userScoresArray = [];
 
     for (let i = 0; i < userScores.length; i++) {
-        // Jesus fucking christ.
-        bm_id = /#osu\/(\d+)/.exec(userScores[i].cells[1].innerHTML)[0].replace('#osu/', '');
-        mods = userScores[i].cells[2].getAttribute("mods");
-        userScoresArray.push(bm_id + '-' + mods);
+        const bm_id = /#osu\/(\d+)/.exec(userScores[i].cells[1].innerHTML)[0].replace('#osu/', '');
+        
+        const mods_enum = userScores[i].cells[3].textContent; 
+
+        userScoresArray.push(bm_id + '-' + mods_enum);
     }
+
     const postData = {
         user_scores: userScoresArray,
-        noHD: noHD,
-        detectSkillsets: detectSkillsets,
-        numSkillsets: numSkillsets
     };
+
     fetch('/predict_beatmaps/', {
         method: 'POST',
         headers: {
@@ -168,9 +188,16 @@ function fetchRecommendedBeatmaps() {
         },
         body: JSON.stringify(postData),
     })
-        .then(response => response.json())
-        .then(data => addRecommendedBeatmaps(data))
-        .catch(error => console.log("Error: " + error));
+    .then(response => response.json())
+    .then(data => addRecommendedBeatmaps(data))
+    .catch(error => console.log("Error: " + error));
+}
+
+
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);  // Get the number of minutes
+    const sec = seconds % 60;              // Get the remaining seconds
+    return `${min}:${sec.toString().padStart(2, '0')}`; // Format as min:seconds
 }
 
 function addRecommendedBeatmaps(recommendedBeatmaps) {
@@ -178,41 +205,45 @@ function addRecommendedBeatmaps(recommendedBeatmaps) {
     tableBody.innerHTML = '';
 
     // For each recommended
-    recommendedBeatmaps.forEach(beatmapSegment => {
-        beatmapSegment.forEach(beatmap => {
-            const newRow = tableBody.insertRow(-1);
-            const beatmapLink = document.createElement('a');
-            const beatmapName = newRow.insertCell(0);
-            const stars = newRow.insertCell(1);
-            const ar = newRow.insertCell(2);
-            const bpm = newRow.insertCell(3);
-            const length = newRow.insertCell(4);
-            const modsCell = newRow.insertCell(5);
+    
+    recommendedBeatmaps.forEach(beatmap => {
+        const newRow = tableBody.insertRow(-1);
+        
+        const beatmapThumbnailCell = newRow.insertCell(0);
+        const beatmapNameCell = newRow.insertCell(1);
+        const starsCell = newRow.insertCell(2);
+        const arCell = newRow.insertCell(3);
+        const bpmCell = newRow.insertCell(4);
+        const lengthCell = newRow.insertCell(5);
+        const modsCell = newRow.insertCell(6);
+        
+        beatmapThumbnailCell.innerHTML = `<img src="${beatmap['list_2x_url']} width="40" height="40">`;
 
-            beatmapLink.href = beatmap['beatmap_link'];
-            beatmapLink.innerHTML = beatmap['title'];
-            beatmapLink.target = "_blank"; // open in new tab
-            beatmapName.appendChild(beatmapLink);
+        const beatmapLink = document.createElement('a');
+        beatmapLink.href = beatmap['link'];
+        beatmapLink.textContent = `${beatmap['title']} [${beatmap['version']}]`;; 
+        beatmapLink.target = "_blank";
+        beatmapNameCell.appendChild(beatmapLink)
 
-            stars.textContent = beatmap['difficulty_rating'];
+        starsCell.textContent = beatmap['difficulty_rating'];
 
-            ar.textContent = beatmap['ar'];
+        arCell.textContent = beatmap['ar'];
 
-            bpm.textContent = beatmap['bpm'];
+        bpmCell.textContent = beatmap['bpm'];
 
-            length.textContent = beatmap['length_seconds'];
+        lengthCell.textContent = formatTime(beatmap['total_length']);
 
-            modsCell.innerHTML = modsToImages(beatmap["mods"]);
-
-            modsCell.setAttribute('mods', beatmap["mods"]);
-        });
-
-        // LINE GOES HERE
-        const divider = tableBody.insertRow(-1);
-        const dividerCell = divider.insertCell(0);
-        dividerCell.colSpan = 6;
-        hr = document.createElement('hr');
-        dividerCell.appendChild(hr);
+        if (beatmap["mods_images"]) {
+            beatmap["mods_images"].forEach(imgUrl => {
+                const modImage = document.createElement('img');
+                modImage.src = imgUrl;
+                modImage.style.width = "25px"; // Set the width of mod images
+                modImage.style.height = "18px"; // Set the height of mod images
+                modImage.style.marginRight = "3px"; // Add some spacing between images
+                modImage.style.verticalAlign = "middle"; // Align images vertically
+                modsCell.appendChild(modImage);
+            });
+        }
     });
 }
 

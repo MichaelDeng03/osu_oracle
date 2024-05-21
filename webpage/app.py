@@ -29,16 +29,10 @@ conn = sqlite3.connect(
 lock = threading.Lock()
 
 word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_1.model")
+
 NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
 )
-
-# word2vec_model_noHD = gensim.models.Word2Vec.load(
-#     "../Models/w2v_model_noHD_15d_50e/w2v_model_noHD_15d_50e"
-# )
-# NN_noHD = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
-#     word2vec_model_noHD.wv.vectors
-# )
 
 
 mod_enums_list = [
@@ -247,6 +241,37 @@ def get_beatmap_info(beatmap_id):
         }
 
 
+@app.route("/get_image_url_from_mods_enum/<int:mods_enum>")
+def mods_enum_to_image_url(mods_enum):
+    """
+    Returns a list of image urls for the mods_enum
+    """
+    mods = str(bin(mods_enum))[2:][::-1]
+    image_names = [
+        "no-fail",
+        "easy",
+        "touchdevice",
+        "hidden",
+        "hard-rock",
+        "sudden-death",
+        "double-time",
+        "relax",
+        "half",
+        "nightcore",
+        "flashlight",
+        "spun-out",
+        "autopilot",
+        "perfect",
+    ]
+
+    base_url = "https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_"
+
+    mod_image_names = [image_names[i] for i in range(len(mods)) if mods[i] == "1"]
+
+    images = [base_url + mod + ".png" for mod in mod_image_names]
+    return images
+
+
 @app.route("/get_user_top_scores/<int:user_id>")
 def get_user_top_scores(user_id):
     """
@@ -296,49 +321,34 @@ def get_user_top_scores(user_id):
     for score in scores:
         score.update(get_beatmap_info(score["beatmap_id"]))
 
-    print(scores[0])
+    for score in scores:
+        score["mods_images"] = mods_enum_to_image_url(score["mods"])
+
     return jsonify(scores)
 
 
-@app.route("/get_user_score/<int:score_id>")
-def get_user_score(score_id):
-    """
-    Gets score info for score_id, returns a jsonified dictionary for frontend. Almost the same as get_user_scores, but only one score.
-    """
-    score = api.score("osu", score_id)
-    try:
-        user_id = getattr(score, "user_id", None)
+@app.route("/get_beatmap/<int:beatmap_id>")
+def get_beatmap(beatmap_id):
+    mods_enum = request.args.get(
+        "modsEnum", default=0, type=int
+    )  # Get mods_enum from query parameters
 
-        beatmap = getattr(score, "beatmap", None)
-        beatmap_id = getattr(beatmap, "id", None) if beatmap else None
+    beatmap = api.beatmap(beatmap_id)
+    beatmapset = getattr(beatmap, "_beatmapset", None)
+    title = getattr(beatmapset, "title_unicode", None) if beatmapset else None
+    covers = getattr(beatmapset, "covers", None)
+    list_2x_url = getattr(covers, "list_2x", None) if covers else None
+    version = getattr(beatmap, "version", None)
+    mods_images = mods_enum_to_image_url(mods_enum)
 
-        beatmapset_id = getattr(beatmap, "beatmapset_id", None) if beatmap else None
-
-        mods = getattr(score, "mods", None)
-        mods = getattr(mods, "value", None) if mods else None
-
-        pp = getattr(score, "pp", None)
-
-        created_at = getattr(score, "created_at", None)
-        created_at = (
-            datetime.strftime(created_at, "%Y-%m-%d %H:%M:%S") if created_at else None
-        )
-
-        score = {
-            "user_id": user_id,
-            "beatmap_id": beatmap_id,
-            "beatmapset_id": beatmapset_id,
-            "pp": pp,
-            "mods": mods,
-            "created_at": created_at,
-            "link": f"https://osu.ppy.sh/beatmapsets/{beatmapset_id}#osu/{beatmap_id}",
+    return jsonify(
+        {
+            "title": title,
+            "version": version,
+            "mods_images": mods_images,
+            "list_2x_url": list_2x_url,
         }
-    except Exception as e:
-        print(e)
-
-    score.update(get_beatmap_info(score["beatmap_id"]))
-
-    return jsonify(score)
+    )
 
 
 @app.route("/predict_beatmaps/", methods=["POST"])
@@ -348,81 +358,52 @@ def predict_beatmaps():
     returns: beatmaps = jsonified list of bm_ids-mods_enum
     """
     data = request.json
-    noHD = data.get("noHD")
-    detect_skillsets = data.get("detectSkillsets")
-    num_skillsets = int(data.get("numSkillsets"))
     user_scores = data.get("user_scores")
-    # Need to decode mod names back to enum
 
-    scores = [
-        score.split("-")[0] + "-" + str(mod_names_to_enum(score.split("-")[1]))
-        for score in user_scores
-    ]
-    user_scores = []
+    model = word2vec_model_std
+    NN = NN_std
 
-    for score in scores:
-        bm_id, mod_enum = score.split("-")
-        mod_enum = int(mod_enum)
-        if noHD:
-            mod_enum &= ~noHD_removed_mods
-        else:
-            mod_enum &= ~standard_removed_mods
+    top_scores_vec = [model.wv[score] for score in user_scores if score in model.wv]
 
-        user_scores.append(f"{bm_id}-{mod_enum}")
-
-    if noHD:
-        word2vec_model = word2vec_model_noHD  # CHANGE LATER
-        NN = NN_noHD  # CHANGE LATER
+    # Clustering the score vectors
+    num_clusters = min(10, len(top_scores_vec))
+    if num_clusters > 1:
+        kmeans = KMeans(n_clusters=num_clusters)
+        kmeans.fit(top_scores_vec)
+        cluster_centers = kmeans.cluster_centers_
     else:
-        word2vec_model = word2vec_model_std
-        NN = NN_std
+        cluster_centers = [
+            np.mean(top_scores_vec, axis=0)
+        ]  # Use mean if too few for clustering
 
-    user_scores = [
-        score for score in user_scores if score in word2vec_model.wv.index_to_key
+    # Calculate the number of results per cluster to meet the 200 total result requirement
+    results_per_cluster = 200 // num_clusters
+
+    # Set the number of neighbors dynamically based on the number of results needed per cluster
+    NN.set_params(n_neighbors=results_per_cluster)
+
+    beatmaps = []
+    for center in cluster_centers:
+        neighbors = NN.kneighbors([center])[1][0]
+        for i in neighbors:
+            beatmap_id = model.wv.index_to_key[i]
+            if beatmap_id not in user_scores:
+                beatmaps.append(beatmap_id)
+
+    # Ensure exactly 200 unique beatmaps, if possible
+    unique_beatmaps = list(set(beatmaps))[:200]
+
+    # Retrieve beatmap info and add mod images
+    beatmap_info = [
+        get_beatmap_info(beatmap.split("-")[0]) for beatmap in unique_beatmaps
     ]
+    for i, beatmap in enumerate(beatmap_info):
+        mods = int(unique_beatmaps[i].split("-")[1])
+        beatmap["mods_images"] = mods_enum_to_image_url(mods)
 
-    user_scores = [tuple(word2vec_model.wv[score]) for score in user_scores]
-    num_skillsets = min(len(user_scores), num_skillsets)
-
-    if detect_skillsets:
-        kmeans = KMeans(n_clusters=num_skillsets, n_init=2, max_iter=50)
-        kmeans.fit(user_scores)
-        centers = kmeans.cluster_centers_
-    else:
-        centers = [np.mean(user_scores, axis=0)]
-
-    rows = []
-
-    for center in centers:
-        rows_partition = []
-        center = [np.array(center)]
-        _, indices = NN.kneighbors(center)
-        beatmaps_and_mods = [word2vec_model.wv.index_to_key[i] for i in indices[0]][
-            : int(200 / len(centers))
-        ]  # Remove a couple of recommendations to make space for other clusters
-
-        for beatmap_and_mods in beatmaps_and_mods:
-            beatmap_id, mods = beatmap_and_mods.split("-")
-            row = {
-                "mods": mod_enum_to_names(int(mods)),
-            }
-            row.update(get_beatmap_title_and_link(beatmap_id))
-            row.update(
-                get_beatmap_attr(
-                    beatmap_id,
-                    ["bpm", "ar", "length_seconds", "difficulty_rating"],
-                )
-            )
-
-            row["length_seconds"] = strftime(
-                "%M:%S", gmtime(row["length_seconds"])
-            )  # Not really an accurate name for it, but MM:SS is more readable, and I would rather do it here than in the JS where I don't know what i'm doing.
-
-            rows_partition.append(row)
-
-        rows.append(rows_partition)
-
-    return jsonify(rows)
+    # Sort by difficulty
+    beatmap_info = sorted(beatmap_info, key=lambda x: x["difficulty_rating"])
+    return jsonify(beatmap_info)
 
 
 if __name__ == "__main__":
