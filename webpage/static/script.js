@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const regex = /\/users\/(\d+)/;
         const match = userID.value.match(regex);
         if (match && match[1]) {
-            console.log(match[1]);
             fetchUserTopScores(match[1]);
         } else {
             console.error("Invalid URL format");
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const regex = /#osu\/(\d+)$/;
         const match = beatmapURL.value.match(regex);
         if (match && match[1]) {
-            console.log(match[1]);
             fetchBeatmap(match[1]);
         } else {
             console.error("Invalid URL format");
@@ -193,12 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
         recommendedBeatmapsData.sort((a, b) => {
             let x = a[columnName];
             let y = b[columnName];
-            if (column >= 2 && column <= 4) { // Sort numerical columns
+            if (column >= 2 && column <= 5) { // Sort numerical columns
                 x = parseFloat(x);
                 y = parseFloat(y);
-            } else if (column == 5) { // Sort by time
-                x = parseTime(x);
-                y = parseTime(y);
             } else if (column == 1) { // Sort by title
                 x = x.toString().toLowerCase();
                 y = y.toString().toLowerCase();
@@ -207,12 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         currentPage = 1; // Reset to the first page after sorting
-        displayRecommendedBeatmaps();
+        displayRecommendedBeatmaps(); 
         updateSortIcons(column, dir);
     }
 
     function parseTime(timeStr) {
+        console.log('Parsing time:', timeStr);
         const parts = timeStr.split(':');
+        console.log(parts);
         return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     }
 
@@ -240,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const mods_enum = userScores[i].cells[3].textContent;
 
-            console.log(bm_id, mods_enum);
             userScoresArray.push(bm_id + '-' + mods_enum);
         }
 
@@ -321,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function removeRow(button) {
-    console.log('Removing row:', button);
     const row = button.parentNode.parentNode;
     row.parentNode.removeChild(row);
 }
