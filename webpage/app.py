@@ -397,7 +397,7 @@ def predict_beatmaps():
 
     # Clustering the score vectors
     # num_clusters = min(10, len(top_scores_vec))
-    num_clusters = min(1, (len(top_scores_vec) // 5) + 1)
+    num_clusters = (len(top_scores_vec) // 20) + 1
     if num_clusters > 1:
         kmeans = KMeans(n_clusters=num_clusters)
         kmeans.fit(top_scores_vec)
@@ -408,33 +408,30 @@ def predict_beatmaps():
         ]  # Use mean if too few for clustering
 
     # Calculate the number of results per cluster to meet the 200 total result requirement
-    results_per_cluster = 200 // num_clusters
+    results_per_cluster = 250 // num_clusters
 
     # Set the number of neighbors dynamically based on the number of results needed per cluster
     NN.set_params(n_neighbors=results_per_cluster)
 
     beatmaps = []
+    beatmaps_set = set()
     for center in cluster_centers:
         neighbors = NN.kneighbors([center])[1][0]
         for i in neighbors:
             beatmap_id = model.wv.index_to_key[i]
-            if beatmap_id not in user_scores:
-                beatmaps.append(beatmap_id)
+            if beatmap_id not in user_scores and beatmap_id not in beatmaps_set:
+                beatmaps.append((beatmap_id, model.wv[beatmap_id] - center))
+                beatmaps_set.add(beatmap_id)
 
-    # Ensure exactly 200 unique beatmaps, if possible
-    unique_beatmaps = list(set(beatmaps))[:200]
+    beatmaps = sorted(beatmaps, key=lambda x: np.linalg.norm(x[1]), reverse=False)
+    beatmaps = [beatmap[0] for beatmap in beatmaps]
 
     # Retrieve beatmap info and add mod images
-    beatmap_info = [
-        get_beatmap_info(beatmap.split("-")[0]) for beatmap in unique_beatmaps
-    ]
+    beatmap_info = [get_beatmap_info(beatmap.split("-")[0]) for beatmap in beatmaps]
     for i, beatmap in enumerate(beatmap_info):
-        mods = int(unique_beatmaps[i].split("-")[1])
+        mods = int(beatmaps[i].split("-")[1])
         beatmap["mods_images"] = mods_enum_to_image_url(mods)
 
-    # Sort by distance to mean of user scores
-    center = np.mean(top_scores_vec, axis=0)
-    beatmaps = sorted(beatmaps, key=lambda x: np.linalg.norm(model.wv[x] - center))
     return jsonify(beatmap_info)
 
 
