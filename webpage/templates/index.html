@@ -17,7 +17,43 @@
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="/static/stylesheet/main.css">
+    <style>
+        table {
+            table-layout: fixed;
+            width: 100%;
+        }
 
+        table th,
+        table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        table th,
+        table td {
+            text-align: center;
+        }
+
+        
+        .modifiers {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .modifiers div {
+            display: flex;
+            align-items: center;
+        }
+
+        .modifiers input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        #paginationControls {
+            margin-bottom: 10px;
+        }
+    </style>
     <script src="static/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
         integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
@@ -37,7 +73,7 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="navbar-nav">
-                <li class="" nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="/help">Help</a>
                 </li>
                 <li class="nav-item">
@@ -48,7 +84,7 @@
                 </li>
         </div>
     </nav>
-    <div class="container-fluid col-md-11">
+    <div class="container-fluid col-md-12">
         <div class="row">
             <div class="section col-md-5">
                 <h1>Maps </h1>
@@ -68,49 +104,49 @@
                             <input type="checkbox" id="easy" name="mod" value=2>
                             <label for="easy"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_easy.png"
-                                    alt="Easy"> Easy</label>
+                                    alt="Easy"> EZ</label>
                         </div>
                         <div>
                             <input type="checkbox" id="touchDevice" name="mod" value=4>
                             <label for="touchDevice"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_touchdevice.png"
-                                    alt="TouchDevice"> TouchDevice</label>
+                                    alt="TouchDevice"> TD</label>
                         </div>
                         <div>
                             <input type="checkbox" id="hidden" name="mod" value=8>
                             <label for="hidden"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_hidden.png"
-                                    alt="Hidden"> Hidden</label>
+                                    alt="Hidden"> HD</label>
                         </div>
                         <div>
                             <input type="checkbox" id="hardRock" name="mod" value=16>
                             <label for="hardRock"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_hard-rock.png"
-                                    alt="HardRock"> HardRock</label>
+                                    alt="HardRock"> HR</label>
                         </div>
                         <div>
                             <input type="checkbox" id="doubleTime" name="mod" value=64>
                             <label for="doubleTime"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_double-time.png"
-                                    alt="DoubleTime"> DoubleTime</label>
+                                    alt="DoubleTime"> DT</label>
                         </div>
                         <div>
                             <input type="checkbox" id="relax" name="mod" value=128>
                             <label for="relax"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_relax.png"
-                                    alt="Relax"> Relax</label>
+                                    alt="Relax"> RX</label>
                         </div>
                         <div>
                             <input type="checkbox" id="halfTime" name="mod" value=256>
                             <label for="halfTime"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_half.png"
-                                    alt="HalfTime"> HalfTime</label>
+                                    alt="HalfTime"> HT</label>
                         </div>
                         <div>
                             <input type="checkbox" id="flashLight" name="mod" value=1024>
                             <label for="flashLight"><img
                                     src="https://raw.githubusercontent.com/ppy/osu-web/master/public/images/badges/mods/mod_flashlight.png"
-                                    alt="FlashLight"> FlashLight</label>
+                                    alt="FlashLight"> FL</label>
                         </div>
                     </div>
 
@@ -121,10 +157,10 @@
                     <table class="table table-dark table-striped" id="scoresTable">
                         <thead>
                             <tr>
-                                <th> </th>
-                                <th> Map </th>
-                                <th> Mods </th>
-                                <th> </th>
+                                <th style="width: 10%;"> </th>
+                                <th style="width: 50%;"> Map </th>
+                                <th style="width: 30%;"> Mods </th>
+                                <th style="width: 10%;"> </th>
                             </tr>
                         </thead>
                         <tbody id="scoresTableBody">
@@ -146,23 +182,28 @@
 
                     <div>
                         <table class="table table-dark table-striped" id="recommendedBeatmaps">
+                            <div id="paginationControls" class="d-flex justify-content-between">
+                                <button id="prevPage" class="btn btn-primary">Previous</button>
+                                <span id="pageInfo"></span>
+                                <button id="nextPage" class="btn btn-primary">Next</button>
+                            </div>
                             <thead>
                                 <tr>
-                                    <th><i></i></th>
-                                    <th onclick="sortTable(1)">Map <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="sortTable(2)">Stars <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="sortTable(3)">AR <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="sortTable(4)">BPM <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="sortTable(5)">Length <i class="fa fa-sort" aria-hidden="true"></i></th>
-                                    <th onclick="sortTable(6)">Mods <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><i></i></th>
+                                    <th style="width:45%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Map <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Stars <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">AR <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">BPM <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Length <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th style="width:10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mods <i class="fa fa-sort" aria-hidden="true"></i></th>
                                 </tr>
                             </thead>
-
-
+                            
                             <tbody id="recommendedBeatmapsBody">
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </div>
         </div>

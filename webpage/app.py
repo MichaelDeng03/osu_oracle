@@ -432,8 +432,9 @@ def predict_beatmaps():
         mods = int(unique_beatmaps[i].split("-")[1])
         beatmap["mods_images"] = mods_enum_to_image_url(mods)
 
-    # Sort by difficulty
-    beatmap_info = sorted(beatmap_info, key=lambda x: x["difficulty_rating"])
+    # Sort by distance to mean of user scores
+    center = np.mean(top_scores_vec, axis=0)
+    beatmaps = sorted(beatmaps, key=lambda x: np.linalg.norm(model.wv[x] - center))
     return jsonify(beatmap_info)
 
 
