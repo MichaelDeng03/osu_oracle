@@ -37,7 +37,7 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="navbar-nav">
-                <li class=""nav-item">
+                <li class="" nav-item">
                     <a class="nav-link" href="/help">Help</a>
                 </li>
                 <li class="nav-item">
@@ -148,15 +148,17 @@
                         <table class="table table-dark table-striped" id="recommendedBeatmaps">
                             <thead>
                                 <tr>
-                                    <th> </th>
-                                    <th> Map </th>
-                                    <th> Stars </th>
-                                    <th> AR </th>
-                                    <th> BPM </th>
-                                    <th> Length </th>
-                                    <th> Mods </th>
+                                    <th onclick="sortTable(0)"><i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(1)">Map <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(2)">Stars <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(3)">AR <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(4)">BPM <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(5)">Length <i class="fa fa-sort" aria-hidden="true"></i></th>
+                                    <th onclick="sortTable(6)">Mods <i class="fa fa-sort" aria-hidden="true"></i></th>
                                 </tr>
                             </thead>
+
+
                             <tbody id="recommendedBeatmapsBody">
                             </tbody>
                         </table>
