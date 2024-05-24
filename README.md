@@ -30,15 +30,14 @@ scraping/
 
 osu!Oracle is currently hosted live at osu-oracle.com.
 
-## Contributing?
-
 ### Data 
 
 Database schema can be found here: <https://dbdiagram.io/d/osu-654e8e887d8bbd6465f40357>.
 
 Please open an issue on github for a copy of the database, or scrape it yourself using the scripts provided in `/scraping`. Otherwise, all data necessary for training the model should be available in data/top_sentences_std.parquet
 
-### Training 
+### Training
+osu!Oracle is based off of collaborative filtering via Item2Vec, implemented through Gensim's Word2Vec. User scores (beatmap-mod) are treated as words, and top scores are used to generate vector embeddings for each beatmap-mod. Predictions are made by clustering top scores (or any list of scores), and applying nearest neighbors to each cluster center. 
 
 To train a model, use `Models/w2v_embeddings.ipynb`. Create a corpus consisting of [beatmap_id-mods, beatmap_id-mods, ... , beatmap_id-mods] for each player's top scores. Some mods are removed. Notably, NC and DT are combined into DT only, and mods such as SD are fully removed.
 
