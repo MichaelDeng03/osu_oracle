@@ -158,67 +158,74 @@ function addBeatmap(score) {
         removeCell.innerHTML = `<i class="fa fa-trash map-delete" aria-hidden="true" onclick="removeRow(this)"></i>`
 }
 
-function sortTable(column) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("recommendedBeatmaps");
-    switching = true;
-    // Set the sorting direction to ascending:
-    dir = "asc";
 
-    // Reset all icons to fa-sort:
+
+
+let sortDirection = []; // Array to keep track of sort direction for each column
+
+function sortTable(column) {
+    var table, rows, dir;
+    table = document.getElementById("recommendedBeatmaps");
+
+    // Initialize sort direction for column if not already set
+    if (sortDirection[column] === undefined) {
+        sortDirection[column] = "asc";
+    }
+
+    // Toggle the sort direction
+    dir = sortDirection[column];
+
+    // Reset all icons to fa-sort
     var headers = table.getElementsByTagName("TH");
-    for (i = 0; i < headers.length; i++) {
+    for (let i = 1; i < headers.length; i++) { // Start from 1 to skip the first column
         headers[i].getElementsByTagName("i")[0].className = "fa fa-sort";
     }
 
-    // Make a loop that will continue until no switching has been done:
-    while (switching) {
-        // Start by saying: no switching is done:
-        switching = false;
-        rows = table.rows;
-        // Loop through all table rows (except the first, which contains table headers):
-        for (i = 1; i < (rows.length - 1); i++) {
-            // Start by saying there should be no switching:
-            shouldSwitch = false;
-            // Get the two elements you want to compare, one from current row and one from the next:
-            x = rows[i].getElementsByTagName("TD")[column];
-            y = rows[i + 1].getElementsByTagName("TD")[column];
-            // Check if the two rows should switch place, based on the direction, asc or desc:
-            if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    // If so, mark as a switch and break the loop:
-                    shouldSwitch = true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-        if (shouldSwitch) {
-            // If a switch has been marked, make the switch and mark that a switch has been done:
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            // Each time a switch is done, increase this count by 1:
-            switchcount++;
-        } else {
-            // If no switching has been done AND the direction is "asc",
-            // set the direction to "desc" and run the while loop again.
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-            }
-        }
-    }
-    // Update the icon for the sorted column:
+    var tbody = table.getElementsByTagName("tbody")[0];
+    rows = Array.from(tbody.getElementsByTagName("tr"));
+
+    rows.sort((a, b) => {
+        let x = a.getElementsByTagName("TD")[column].innerHTML;
+        let y = b.getElementsByTagName("TD")[column].innerHTML;
+        return compareValues(x, y, column, dir);
+    });
+
+    // Append rows back in the correct order
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update the icon for the sorted column
     var icon = headers[column].getElementsByTagName("i")[0];
     if (dir == "asc") {
         icon.className = "fa fa-sort-up";
+        sortDirection[column] = "desc"; // Set the sorting direction to descending for next click
     } else {
         icon.className = "fa fa-sort-down";
+        sortDirection[column] = "asc"; // Set the sorting direction to ascending for next click
     }
+}
+
+function compareValues(a, b, column, dir) {
+    // Check if the column should be sorted as a number or time
+    let valA = a.toLowerCase(), valB = b.toLowerCase();
+    
+    if (column >= 2 && column <= 4) {
+        valA = parseFloat(a);
+        valB = parseFloat(b);
+    } else if (column == 5) {
+        valA = parseTime(a);
+        valB = parseTime(b);
+    }
+
+    if (dir == "asc") {
+        return valA > valB ? 1 : -1;
+    } else {
+        return valA < valB ? 1 : -1;
+    }
+}
+
+function parseTime(timeStr) {
+    var parts = timeStr.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
 }
 
 

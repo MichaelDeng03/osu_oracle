@@ -397,7 +397,7 @@ def predict_beatmaps():
 
     # Clustering the score vectors
     # num_clusters = min(10, len(top_scores_vec))
-    num_clusters = min(1, (len(top_scores_vec) // 10) + 1)
+    num_clusters = min(1, (len(top_scores_vec) // 5) + 1)
     if num_clusters > 1:
         kmeans = KMeans(n_clusters=num_clusters)
         kmeans.fit(top_scores_vec)
