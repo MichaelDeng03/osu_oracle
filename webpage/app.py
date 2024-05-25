@@ -28,7 +28,7 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_4.model")
+word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_5.model")
 
 NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
@@ -305,6 +305,7 @@ def get_user_top_scores(user_id):
     try:
         top_scores = api.user_scores(user_id, type="best", mode="osu", limit=100)
         scores = []
+
     except Exception as e:
         print(e)
 
