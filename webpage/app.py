@@ -28,7 +28,7 @@ conn = sqlite3.connect(
 )  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
-word2vec_model_std = gensim.models.Word2Vec.load("../Models/word2vec_5.model")
+word2vec_model_std = gensim.models.Word2Vec.load("../Models/recent_word2vec_1.model")
 
 NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
     word2vec_model_std.wv.vectors
@@ -219,7 +219,7 @@ def get_beatmap_info(beatmap_id):
             """
 
             lock.acquire()
-            beatmapset.insert(cursor)
+            cursor.execute(query, beatmapset)
             conn.commit()
             lock.release()
 
