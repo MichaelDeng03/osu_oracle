@@ -1,0 +1,14 @@
+# too chonky to push.
+*.db
+# Removing virtual enviornment & ipynb artifacts.
+venv/
+.ipynb_checkpoints/
+# You'll have to get your own access token. 
+*.pyc
+# Slightly too large
+Models/w2v_model*
+osu_oracle_venv
+*.db-journal
+*.parquet
+*.model
+*.pickle
