@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: ./scraper
+    volumes:
+      - ./scraper:/app
+    ports:
+      - "8881:8888"
+    depends_on:
+      - database
+    environment:
+      - JUPYTER_TOKEN=password
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+
+  ml_trainer:
+    build: ./ml_trainer
+    volumes:
+      - ./ml_trainer:/app
+    ports:
+      - "8882:8888"
+    depends_on:
+      - database
+    environment:
+      - JUPYTER_TOKEN=password
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+
+  web_app:
+    build: ./web_app
+    volumes:
+      - ./web_app:/app
+    ports:
+      - "8000:8000"
+      - "8883:8888"
+    depends_on:
+      - database
+    environment:
+      - JUPYTER_TOKEN=password
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+
+  database:
+    build: ./database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=myproject
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+
+volumes:
+  postgres_data:
