@@ -1,0 +1,41 @@
+# This is an example docker-compose file generated with an AI. 
+
+version: '3.8'
+
+services:
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+
+  # backend:
+  #   build: ./backend
+  #   depends_on:
+  #     - db
+
+  data_collector:
+    build:
+      context: ./data_collector
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/mydatabase
+
+  # ml_trainer:
+  #   build: ./ml_trainer
+
+  # scheduler:
+  #   build: ./scheduler
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: your_db_name
+      POSTGRES_USER: your_user
+      POSTGRES_PASSWORD: your_password
+
+volumes:
+  postgres_data:
