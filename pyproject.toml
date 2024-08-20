@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Michael Deng <michaeldeng2003@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,6 +15,15 @@ gensim = "^4.3.3"
 
 [tool.poetry.group.website.dependencies]
 flask = "^3.0.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+black = "^24.8.0"
+flake8 = "^7.1.1"
+bandit = "^1.7.9"
+pre-commit = "^3.8.0"
+mypy = "^1.11.1"
 
 [build-system]
 requires = ["poetry-core"]
