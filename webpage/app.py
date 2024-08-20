@@ -19,6 +19,7 @@ import os
 from data.classes import Beatmap, Beatmapset, Score, User
 
 OSU_CLIENT_ID = os.environ.get("OSU_CLIENT_ID")
+
 OSU_CLIENT_SECRET = os.environ.get("OSU_CLIENT_SECRET")
 
 app = Flask(__name__)
