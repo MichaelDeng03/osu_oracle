@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "osu-oracle"
+version = "0.1.0"
+description = ""
+authors = ["Michael Deng <michaeldeng2003@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ossapi = "^4.0.0"
+scikit-learn = "^1.5.1"
+gensim = "^4.3.3"
+
+
+[tool.poetry.group.website.dependencies]
+flask = "^3.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
