@@ -1,14 +1,17 @@
-from ossapi import Ossapi
 import sqlite3
-from time import strftime, localtime
 import time
 from concurrent.futures import ThreadPoolExecutor
-import sys
-from numpy import array_split
+from time import localtime, strftime
 
-sys.path.insert(0, "../") # I run this script from scraping sometimes so I need to add the parent directory to the path
-from data.classes import User, Score
-from osu_access_token import client_id, client_secret
+from dotenv import dotenv_values
+from numpy import array_split
+from ossapi import Ossapi
+
+from data.classes import Score, User
+
+config = dotenv_values("../.env")
+client_id = config["osu_client_id"]
+client_secret = config["osu_client_secret"]
 
 api = Ossapi(client_id, client_secret)
 
@@ -17,9 +20,7 @@ cursor = conn.cursor()
 user_ids = cursor.execute("SELECT user_id FROM users").fetchall()
 user_ids = [user_id[0] for user_id in user_ids]
 
-completed_ids = cursor.execute(
-    "SELECT user_id FROM users WHERE username IS NOT NULL"
-).fetchall()
+completed_ids = cursor.execute("SELECT user_id FROM users WHERE username IS NOT NULL").fetchall()
 completed_ids = [user_id[0] for user_id in completed_ids]
 
 user_ids = list(set(user_ids) - set(completed_ids))

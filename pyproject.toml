@@ -11,6 +11,7 @@ python = "^3.10"
 ossapi = "^4.0.0"
 scikit-learn = "^1.5.1"
 gensim = "^4.3.3"
+python-dotenv = "^1.0.1"
 
 
 [tool.poetry.group.website.dependencies]

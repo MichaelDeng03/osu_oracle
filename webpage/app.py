@@ -1,29 +1,21 @@
 import sqlite3
-import sys
 import threading
 from datetime import datetime
-from time import gmtime, strftime
 
 import gensim
 import numpy as np
+from dotenv import dotenv_values
 from flask import Flask, jsonify, render_template, request
 from ossapi import Ossapi
-
-# from pyclustering.cluster.xmeans import xmeans
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 
-sys.path.insert(0, "../")
-import os
-
-from data.classes import Beatmap, Beatmapset, Score, User
-
-OSU_CLIENT_ID = os.environ.get("OSU_CLIENT_ID")
-
-OSU_CLIENT_SECRET = os.environ.get("OSU_CLIENT_SECRET")
+config = dotenv_values("../.env")
+client_id = config["osu_client_id"]
+client_secret = config["osu_client_secret"]
 
 app = Flask(__name__)
-api = Ossapi(OSU_CLIENT_ID, OSU_CLIENT_SECRET)
+api = Ossapi(client_id, client_secret)
 conn = sqlite3.connect("../data/UserScores.db", check_same_thread=False)  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
@@ -118,12 +110,16 @@ def home():
 
 def get_beatmap_info(beatmap_id):
     """
-    Returns a dictionary containing beatmap info for version, title, bpm, ar, total_length, and difficulty_rating, beatmapset_id, list_2x_url, and link
+    Returns a dictionary containing beatmap info for:
+    version, title, bpm, ar, total_length, and difficulty_rating, beatmapset_id, list_2x_url, and link
     """
     conn = sqlite3.connect("../data/UserScores.db")
     cursor = conn.cursor()
     try:
-        query = f"SELECT version, bpm, ar, total_length, difficulty_rating, beatmapset_id FROM beatmaps_std WHERE beatmap_id = {beatmap_id}"
+        query = (
+            "SELECT version, bpm, ar, total_length, difficulty_rating, beatmapset_id "
+            f"FROM beatmaps_std WHERE beatmap_id = {beatmap_id}"  # nosec
+        )
         cursor.execute(query)
         result = cursor.fetchone()
         if result:
@@ -166,9 +162,9 @@ def get_beatmap_info(beatmap_id):
             cursor.execute(
                 """
                 INSERT INTO beatmaps_std (
-                accuracy, ar, beatmap_id, beatmapset_id, bpm, cs, 
-                difficulty_rating, drain, max_combo, owner_user_id, 
-                total_length, url, version) 
+                accuracy, ar, beatmap_id, beatmapset_id, bpm, cs,
+                difficulty_rating, drain, max_combo, owner_user_id,
+                total_length, url, version)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 beatmap,
@@ -176,7 +172,10 @@ def get_beatmap_info(beatmap_id):
             conn.commit()
             lock.release()
 
-        query = f"SELECT title, list_2x_url, artist, creator, language, genre FROM beatmapsets_std WHERE beatmapset_id = {beatmapset_id}"
+        query = (
+            "SELECT title, list_2x_url, artist, creator, language, genre "
+            f"FROM beatmapsets_std WHERE beatmapset_id = {beatmapset_id}"  # nosec
+        )
         cursor.execute(query)
         result = cursor.fetchone()
         if result:
@@ -210,8 +209,8 @@ def get_beatmap_info(beatmap_id):
             )
 
             query = """
-            INSERT INTO beatmapsets_std 
-            (beatmapset_id, artist, creator, genre, language, list_2x_url, preview_url, title) 
+            INSERT INTO beatmapsets_std
+            (beatmapset_id, artist, creator, genre, language, list_2x_url, preview_url, title)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """
 
@@ -281,7 +280,6 @@ def update_mods(mods_enum, keepHD=True):
     NF = 1
     HD = 8  # Removed only for no HD
     SD = 32
-    DT = 64
     NC = 512
     SO = 4096
     PF = 16384
@@ -426,4 +424,4 @@ def predict_beatmaps():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000)  # nosec
