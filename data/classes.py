@@ -8,6 +8,9 @@ from time import localtime, strftime
 from typing import Optional
 
 import ossapi.models
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String
+
+from database import Base
 
 
 @dataclass
@@ -49,7 +52,7 @@ class Beatmap:
         self.length_seconds = getattr(beatmap, "total_length", -1)
         self.author_id = getattr(beatmap, "user_id", -1)
         self.mode_int = getattr(beatmap, "mode_int", -1)
-        self.version = getattr(beatmap, "version", -1)
+        self.version = getattr(beatmap, "version", "")
 
     def insert(self, cursor: Cursor) -> None:
         """Inserts beatmap into beatmaps table, if it doesn't already exist."""
@@ -105,21 +108,21 @@ class User:
 
     def __init__(self, user: ossapi.models.User) -> None:
         self.user_id = getattr(user, "id", None)
-        self.username = getattr(user, "username", -1)
+        self.username = getattr(user, "username", "")
 
         # Check if 'statistics' exists in user and set attributes accordingly
         statistics = getattr(user, "statistics", -1)
         if statistics:
-            self.total_pp = getattr(statistics, "pp", None)
-            self.hit_acc = getattr(statistics, "hit_accuracy", None)
-            self.ranked_score = getattr(statistics, "ranked_score", None)
-            self.play_count = getattr(statistics, "play_count", None)
-            self.playtime = getattr(statistics, "play_time", None)
-            self.count_100 = getattr(statistics, "count_100", None)
-            self.count_50 = getattr(statistics, "count_50", None)
-            self.count_300 = getattr(statistics, "count_300", None)
-            self.count_miss = getattr(statistics, "count_miss", None)
-            self.total_hits = getattr(statistics, "total_hits", None)
+            self.total_pp = getattr(statistics, "pp", -1)
+            self.hit_acc = getattr(statistics, "hit_accuracy", -1)
+            self.ranked_score = getattr(statistics, "ranked_score", -1)
+            self.play_count = getattr(statistics, "play_count", -1)
+            self.playtime = getattr(statistics, "play_time", -1)
+            self.count_100 = getattr(statistics, "count_100", -1)
+            self.count_50 = getattr(statistics, "count_50", -1)
+            self.count_300 = getattr(statistics, "count_300", -1)
+            self.count_miss = getattr(statistics, "count_miss", -1)
+            self.total_hits = getattr(statistics, "total_hits", -1)
         else:
             self.total_pp = None
             self.hit_acc = None
