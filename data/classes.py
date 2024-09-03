@@ -1,8 +1,8 @@
 """ This module is for osu.db tables """
 
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Decimal, Float, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -15,7 +15,7 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    total_pp: Mapped[Decimal | None] = mapped_column(Float, nullable=True)
+    total_pp: Mapped[float | None] = mapped_column(Float, nullable=True)
     hit_acc: Mapped[float | None] = mapped_column(Float, nullable=True)
     playtime: Mapped[int | None] = mapped_column(default=-1, nullable=True)
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
