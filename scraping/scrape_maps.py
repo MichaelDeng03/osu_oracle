@@ -8,7 +8,7 @@ from dotenv import dotenv_values
 from numpy import array_split
 from ossapi import Ossapi
 
-from osu_oracle.classes import Beatmap, Beatmapset
+from osu_oracle.models import Beatmap, Beatmapset
 
 config = dotenv_values("../.env")
 client_id = config["osu_client_id"]
