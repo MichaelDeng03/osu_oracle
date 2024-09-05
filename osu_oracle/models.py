@@ -22,10 +22,28 @@ class User(Base):
     update_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    scores: Mapped[list["Score"]] = relationship(back_populates="user")  # List of user scores
+    scores: Mapped[list["Score"]] = relationship("Score", back_populates="user")  # List of user scores
     beatmapsets: Mapped[list["Beatmapset"]] = relationship(
-        back_populates="user"
+        "Beatmapset", back_populates="user"
     )  # List of beatmapsets the user has created
+
+
+class Score(Base):
+    __tablename__ = "scores"
+
+    score_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.user_id'))
+    beatmap_id: Mapped[int] = mapped_column(ForeignKey('beatmaps.beatmap_id'))
+    mods: Mapped[int] = mapped_column(Integer)
+    mode: Mapped[int | None] = mapped_column(String(5))
+    max_combo: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pp: Mapped[float] = mapped_column(Float, nullable=True)
+    rank: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="scores")
+    beatmap: Mapped["Beatmap"] = relationship("Beatmap", back_populates="scores")
 
 
 class Beatmap(Base):
@@ -48,19 +66,9 @@ class Beatmap(Base):
     mode_int: Mapped[int | None] = mapped_column(Integer, nullable=True)
     version: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-
-class Score(Base):
-    __tablename__ = "scores"
-
-    score_id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.user_id'))
-    beatmap_id: Mapped[int] = mapped_column(ForeignKey('beatmaps.beatmap_id'))
-    mods: Mapped[int] = mapped_column(Integer)
-    mode: Mapped[int | None] = mapped_column(String(5))
-    max_combo: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    pp: Mapped[float] = mapped_column(Float, nullable=True)
-    rank: Mapped[str | None] = mapped_column(String(5), nullable=True)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Relationships
+    beatmapset: Mapped["Beatmapset"] = relationship("Beatmapset", back_populates="beatmaps")
+    scores: Mapped[list["Score"]] = relationship("Score", back_populates="beatmap")
 
 
 class Beatmapset(Base):
@@ -74,3 +82,7 @@ class Beatmapset(Base):
     artist: Mapped[str | None] = mapped_column(String(50))
     author_id: Mapped[int | None] = mapped_column(ForeignKey('users.user_id'))
     # TODO Add cards
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="beatmapsets")
+    beatmaps: Mapped[list["Beatmap"]] = relationship("Beatmap", back_populates="beatmapset")
