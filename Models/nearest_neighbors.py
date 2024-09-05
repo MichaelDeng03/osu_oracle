@@ -9,7 +9,7 @@ from dotenv import dotenv_values
 from ossapi import Ossapi
 from sklearn.neighbors import NearestNeighbors
 
-from data.classes import Score
+from osu_oracle.classes import Score
 
 config = dotenv_values("../.env")
 client_id = config["osu_client_id"]
