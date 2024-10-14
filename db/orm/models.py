@@ -85,7 +85,10 @@ class MetadataMixin(SQLModel):
 
 # User models
 class User(Base, MetadataMixin, table=True):
+    username: str = Field(description="The username of the user", nullable=False)
     scores: list["Score"] = Relationship(back_populates="user", cascade_delete=True)
+
+    beatmapsets: list["Beatmapset"] = Relationship(back_populates="mapper")
 
 
 # Score models
@@ -102,6 +105,7 @@ class Score(Base, MetadataMixin, table=True):
         foreign_key="user.id",
         nullable=False,
     )
+    set_at: datetime | None = Field(default=None, description="The date the score was set - not db related")
     user: "User" = Relationship(back_populates="scores")
     beatmap: "Beatmap" = Relationship(back_populates="scores")
 
@@ -115,7 +119,13 @@ class Beatmap(Base, MetadataMixin, table=True):
         foreign_key="beatmapset.id",
         nullable=False,
     )
-
+    difficulty_rating: float = Field(description="The difficulty rating of the beatmap", nullable=False)
+    bpm: float = Field(description="The BPM of the beatmap", nullable=False)
+    cs: float = Field(description="The circle size of the beatmap", nullable=False)
+    od: float = Field(description="The overall difficulty of the beatmap", nullable=False)
+    ar: float = Field(description="The approach rate of the beatmap", nullable=False)
+    length: int = Field(description="The length of the beatmap in seconds", nullable=False)
+    version: str = Field(description='The version name of the beatmap', nullable=False)
     beatmapset: "Beatmapset" = Relationship(back_populates="beatmaps")
     scores: list["Score"] = Relationship(
         back_populates="beatmap", sa_relationship_kwargs={"lazy": "select"}
@@ -124,4 +134,10 @@ class Beatmap(Base, MetadataMixin, table=True):
 
 # Beatmapset models
 class Beatmapset(Base, MetadataMixin, table=True):
+    ranked_date: datetime | None = Field(default=None, description="The date the beatmapset was ranked")
+    title: str = Field(description="The title of the beatmapset", nullable=False)
+    artist: str = Field(description="The artist of the beatmapset", nullable=False)
+    author_id: int | None = Field(description="The user (id) that created the beatmapset", nullable=True)
+
     beatmaps: list["Beatmap"] = Relationship(back_populates="beatmapset", cascade_delete=True)
+    mapper: "User" = Relationship(back_populates="beatmapsets")

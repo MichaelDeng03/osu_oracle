@@ -30,5 +30,5 @@ def delete_generic(db: Session, model: TModel) -> TModel:
     return model
 
 
-def get_generic(db: Session, model: TModel, model_id: int) -> TModel | None:
-    return db.get(model, model_id)
+def get_generic(db: Session, model: TModel, id: int) -> TModel | None:
+    return db.get(model, id)
