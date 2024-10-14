@@ -12,7 +12,7 @@ ossapi = "==4.0.0"
 scikit-learn = "==1.5.1"
 gensim = "==4.3.3"
 python-dotenv = "==1.0.1"
-sqlalchemy = "==2.0.32"
+sqlalchemy = "==2.0.34"
 sqlmodel = "==0.0.22"
 
 
@@ -21,14 +21,14 @@ flask = "==3.0.3"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest = "==8.3.2"
-black = "==24.8.0"
-flake8 = "==7.1.1"
-bandit = "==1.7.9"
-pre-commit = "==3.8.0"
-mypy = "==1.11.1"
-ipykernel = "==6.29.5"
 jupyterlab = "==4.2.5"
+black = "==24.4.2"
+flake8 = "==7.1.0"
+isort = "==5.13.2"
+bandit = "==1.7.9"
+pre-commit = "==3.7.1"
+mypy = "==1.11.2"
+alembic = "==1.13.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,13 +1,11 @@
-from collections.abc import Sequence
 from typing import TypeVar
-from uuid import UUID
 
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from .orm.models import Base
 
-TModel = TypeVar("ModelType", bound=Base)
-TUpdate = TypeVar("UpdateType", bound=Base)
+TModel = TypeVar("TModel", bound=Base)
+TUpdate = TypeVar("TUpdate", bound=Base)
 
 
 def create_generic(db: Session, model: TModel) -> TModel:
@@ -18,14 +16,12 @@ def create_generic(db: Session, model: TModel) -> TModel:
 
 
 def update_generic(db: Session, model: TModel, model_update: TUpdate) -> TModel:
-    if model is None:
-        return None
-
     fields_payload = model_update.model_dump(exclude_none=True)
     for value in fields_payload:
         setattr(model, value, fields_payload[value])
     db.commit()
     db.refresh(model)
+    return model
 
 
 def delete_generic(db: Session, model: TModel) -> TModel:
@@ -34,5 +30,5 @@ def delete_generic(db: Session, model: TModel) -> TModel:
     return model
 
 
-def get_generic(db: Session, model: TModel, model_id: int) -> TModel:
+def get_generic(db: Session, model: TModel, model_id: int) -> TModel | None:
     return db.get(model, model_id)
