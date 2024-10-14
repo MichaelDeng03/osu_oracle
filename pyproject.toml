@@ -13,6 +13,7 @@ scikit-learn = "==1.5.1"
 gensim = "==4.3.3"
 python-dotenv = "==1.0.1"
 sqlalchemy = "==2.0.32"
+sqlmodel = "==0.0.22"
 
 
 [tool.poetry.group.website.dependencies]
