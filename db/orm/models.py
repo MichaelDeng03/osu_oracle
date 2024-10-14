@@ -9,14 +9,14 @@ from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 # Enums
-class Modes(enum.Enum):
+class ModeEnum(enum.Enum):
     osu = 'osu'
     taiko = 'taiko'
     mania = 'mania'
     fruits = 'fruits'
 
 
-class Mods(enum.IntFlag):
+class ModsEnum(enum.IntFlag):
     NoMod = 0
     NoFail = 1
     Easy = 2
@@ -58,6 +58,7 @@ class Mods(enum.IntFlag):
     ScoreIncreaseMods = Hidden | HardRock | DoubleTime | Flashlight | FadeIn
 
 
+# Base Models
 class Base(SQLModel):
     def __repr__(self) -> str:
         return self.model_dump_json(indent=4, exclude_unset=False, exclude_none=False, exclude_defaults=False)
@@ -89,7 +90,7 @@ class User(Base, MetadataMixin, table=True):
 
 # Score models
 class Score(Base, MetadataMixin, table=True):
-    mods: Mods = Field(sa_column=Column(SAEnum(Mods, name="mods_enum"), nullable=False))
+    mods: ModsEnum = Field(sa_column=Column(SAEnum(ModsEnum, name="mods_enum"), nullable=False))
     pp: float = Field(description="The pp of the score", nullable=False)
     beatmap_id: int = Field(
         description="The beatmap (id) this score belongs to",
@@ -107,17 +108,18 @@ class Score(Base, MetadataMixin, table=True):
 
 # Beatmap models
 class Beatmap(Base, MetadataMixin, table=True):
-    mode: Modes = Field(sa_column=Column(SAEnum(Modes, name="mode_enum"), nullable=False))
-    beatmapset: "Beatmapset" = Relationship(back_populates="beatmap")
-    scores: list["Score"] = Relationship(
-        back_populates="beatmap", sa_relationship_kwargs={"lazy": "select"}
-    )  # Don't load scores until explicitly accessed
+    mode: ModeEnum = Field(sa_column=Column(SAEnum(ModeEnum, name="mode_enum"), nullable=False), default=ModeEnum.osu)
 
     beatmapset_id: int = Field(
         description="The beatmapset (id) this beatmap belongs to",
         foreign_key="beatmapset.id",
         nullable=False,
     )
+
+    beatmapset: "Beatmapset" = Relationship(back_populates="beatmaps")
+    scores: list["Score"] = Relationship(
+        back_populates="beatmap", sa_relationship_kwargs={"lazy": "select"}
+    )  # Don't load scores until explicitly accessed
 
 
 # Beatmapset models
