@@ -32,3 +32,7 @@ def delete_generic(db: Session, model: TModel) -> TModel:
     db.delete(model)
     db.commit()
     return model
+
+
+def get_generic(db: Session, model: TModel, model_id: int) -> TModel:
+    return db.get(model, model_id)

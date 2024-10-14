@@ -13,16 +13,17 @@ from sqlmodel import JSON, Column, Enum, Field, Relationship, SQLModel
 
 
 class Base(SQLModel):
+    id: int = Field(primary_key=True, nullable=False)  # All of the osu objects already have a unique id.
+
     def __repr__(self) -> str:
-        return self.model_dump_json(indent=4, exclude_unset=True, exclude_none=True)
+        return self.model_dump_json(indent=4, exclude_unset=False, exclude_none=False, exclude_defaults=False)
 
 
 class MetadataMixin(SQLModel):
     """
-    Mixin class for id, created_at, and updated_at fields
+    Mixin class for created_at, and updated_at fields
     """
 
-    id: UUID = Field(primary_key=True, default_factory=uuid4)
     created_at: datetime | None = Field(
         default=None,
         sa_type=cast(Any, DateTime(timezone=True)),
@@ -37,18 +38,19 @@ class MetadataMixin(SQLModel):
 
 
 # User models
+class User(Base, MetadataMixin, table=True):
+    scores: list["Score"] = Relationship(back_populates="user", cascade_delete=True)
 
 
-class UserBase(Base):
-    pass
+# Score models
+class Score(Base, MetadataMixin, table=True):
+    user: "User" = Relationship(back_populates="scores")
 
-
-class UserUpdate(Base):
-    pass
-
-
-class User(UserBase, MetadataMixin, table=True):
-    pass
+    user_id: int = Field(
+        description="The user (id) this score belongs to",
+        foreign_key="user.id",
+        nullable=False,
+    )
 
 
 # Beatmap models
@@ -59,14 +61,17 @@ class Modes(enum.Enum):
     fruits = 'fruits'
 
 
-class BeatmapBase(Base):
+class Beatmap(Base, MetadataMixin, table=True):
     mode: Modes = Field(sa_column=Column(SAEnum(Modes, name="mode_enum"), nullable=False))
+    beatmapset: "Beatmapset" = Relationship(back_populates="beatmaps")
 
-
-class Beatmap(BeatmapBase, MetadataMixin, table=True):
-    pass
+    beatmapset_id: int = Field(
+        description="The beatmapset (id) this beatmap belongs to",
+        foreign_key="beatmapset.id",
+        nullable=False,
+    )
 
 
 # Beatmapset models
-
-# Score models
+class Beatmapset(Base, MetadataMixin, table=True):
+    beatmaps: list["Beatmap"] = Relationship(back_populates="beatmapset", cascade_delete=True)
