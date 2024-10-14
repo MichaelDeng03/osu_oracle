@@ -4,6 +4,7 @@ from typing import Any, Mapping, cast
 
 from sqlalchemy import DateTime
 from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Integer
 from sqlalchemy.sql import func
 from sqlmodel import Column, Field, Relationship, SQLModel
 
@@ -94,7 +95,7 @@ class User(Base, MetadataMixin, table=True):
 
 # Score models
 class Score(Base, MetadataMixin, table=True):
-    mods: ModsEnum = Field(sa_column=Column(SAEnum(ModsEnum, name="mods_enum"), nullable=False))
+    mods: ModsEnum = Field(sa_column=Column(Integer, nullable=False), default=ModsEnum.NoMod)
     pp: float = Field(description="The pp of the score", nullable=False)
     beatmap_id: int = Field(
         description="The beatmap (id) this score belongs to",

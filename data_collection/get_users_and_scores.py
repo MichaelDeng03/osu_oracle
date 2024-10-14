@@ -1,4 +1,6 @@
 from data_collection import ossapi_client
+from db import crud
+from db.orm import Session, models
 
 
 def get_user_and_scores(user_id: int, mode: str = 'osu', type: str = 'best'):
@@ -13,5 +15,8 @@ def get_user_and_scores(user_id: int, mode: str = 'osu', type: str = 'best'):
             "beatmap_id": score.beatmap.id,
             "user_id": user_id,
             "set_at": score.created_at,
+            "mods": score.mods.value,
         }
-        print(score_data)
+        with Session() as session:
+            score = models.Score(**score_data)
+            crud.create_or_ignore(session, score)
