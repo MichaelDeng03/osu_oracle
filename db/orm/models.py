@@ -1,13 +1,15 @@
+import enum
 from datetime import datetime
-from enum import Enum
 from typing import Any, Mapping, Optional, Self, cast
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError, model_validator
-from sqlalchemy import CheckConstraint, DateTime
+from sqlalchemy import CheckConstraint, Column, DateTime
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import Integer
 from sqlalchemy.schema import Index
 from sqlalchemy.sql import func
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import JSON, Column, Enum, Field, Relationship, SQLModel
 
 
 class Base(SQLModel):
@@ -41,7 +43,7 @@ class UserBase(Base):
     pass
 
 
-class UserUpdate(UserBase):
+class UserUpdate(Base):
     pass
 
 
@@ -50,18 +52,21 @@ class User(UserBase, MetadataMixin, table=True):
 
 
 # Beatmap models
-class ModeEnum(Enum):
-    STANDARD = 1
-    TAIKO = 2
-    CATCH = 3
-    MANIA = 4
+class Modes(enum.Enum):
+    osu = 'osu'
+    taiko = 'taiko'
+    mania = 'mania'
+    fruits = 'fruits'
 
 
-class Beatmapbase(Base):
-    mode: ModeEnum
+class BeatmapBase(Base):
+    mode: Modes = Field(sa_column=Column(SAEnum(Modes, name="mode_enum"), nullable=False))
+
+
+class Beatmap(BeatmapBase, MetadataMixin, table=True):
+    pass
 
 
 # Beatmapset models
-
 
 # Score models
