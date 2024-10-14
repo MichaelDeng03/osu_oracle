@@ -9,7 +9,7 @@ from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 # Enums
-class ModeEnum(enum.Enum):
+class ModeEnum(enum.Enum):  # matches ossapi modes
     osu = 'osu'
     taiko = 'taiko'
     mania = 'mania'

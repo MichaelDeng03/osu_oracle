@@ -1,11 +1,11 @@
-import os
 from contextlib import contextmanager
 
-from dotenv import load_dotenv
-from sqlalchemy import URL
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session as SQLModelSession
 from sqlmodel import SQLModel, create_engine
+
+# Necessary for sqlmodel metadata
+from db.orm import models  # noqa
 
 DATABASE_URL = 'sqlite:///./osu.db'
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

@@ -4,41 +4,33 @@ from time import localtime, strftime
 
 import requests
 from bs4 import BeautifulSoup as bs
-from dotenv import dotenv_values
-from ossapi import Cursor, Ossapi
+from ossapi import Cursor
 
+from data_collection import ossapi_client
 from db import crud
 from db.orm import Session, models
-
-config = dotenv_values(".env")
-client_id = config.get("osu_client_id")
-client_secret = config.get("osu_client_secret")
-
-if not client_id or not client_secret:
-    raise ValueError("osu! API credentials not found in .env file")
 
 
 def get_user_ids_from_country_leaderboard(country: str):
     """
-    Gets all user ids from osu! country leaderboards
+    Gets all user ids & usernames from osu! country leaderboards
     Saves them in db.
     """
-    print(f'{strftime("%H:%M:%S", localtime(time.time()))}: Getting user ids from {country=} leaderboard')
-    api = Ossapi(client_id, client_secret)
+    # api = Ossapi(client_id, client_secret)
     lb_cursor = Cursor(page=1)
     while lb_cursor is not None:
         print(f'{strftime("%H:%M:%S", localtime(time.time()))}: Starting {lb_cursor.page=}')
-        lb = api.ranking(mode='osu', type='performance', country=country, cursor=lb_cursor)
+        lb = ossapi_client.ranking(mode='osu', type='performance', country=country, cursor=lb_cursor)
         lb_cursor = lb.cursor
         for user_stats in lb.ranking:
-            user = models.User(id=user_stats.user.id)
+            user = models.User(id=user_stats.user.id, username=user_stats.user.username)
             with Session() as session:
                 crud.create_or_ignore(session, user)
 
 
 def get_user_ids():
     """
-    Gets all user ids from osu! leaderboards
+    Gets all user ids & usernames from osu! leaderboards
     Saves them in db.
     """
     page_html = requests.get("https://osu.ppy.sh/rankings/osu/performance", timeout=3).text
@@ -48,5 +40,12 @@ def get_user_ids():
     data = json.loads(json_text)
     country_codes = [country["id"] for country in data["items"]]
 
-    for country_code in country_codes:
+    for i, country_code in enumerate(country_codes):
+        print(
+            f"{i}/{len(country_codes)} {strftime('%H:%M:%S', localtime(time.time()))}:",
+            f"Getting user ids from {country_code=} leaderboard",
+        )
         get_user_ids_from_country_leaderboard(country_code)
+
+
+get_user_ids()
