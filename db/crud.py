@@ -2,7 +2,7 @@ from typing import TypeVar
 
 from sqlmodel import Session
 
-from .orm.models import Base
+from db.orm.models import Base
 
 TModel = TypeVar("TModel", bound=Base)
 TUpdate = TypeVar("TUpdate", bound=Base)
@@ -30,5 +30,12 @@ def delete_generic(db: Session, model: TModel) -> TModel:
     return model
 
 
-def get_generic(db: Session, model: TModel, id: int) -> TModel | None:
+def get_generic(db: Session, model: type[TModel], id: int) -> TModel | None:
     return db.get(model, id)
+
+
+def create_or_ignore(db: Session, model: TModel) -> TModel:
+    existing = get_generic(db, type(model), model.id)
+    if existing:
+        return existing
+    return create_generic(db, model)

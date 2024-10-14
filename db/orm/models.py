@@ -60,6 +60,8 @@ class ModsEnum(enum.IntFlag):
 
 # Base Models
 class Base(SQLModel):
+    id: int = Field(primary_key=True, nullable=False)  # All of the osu objects already have a unique id.
+
     def __repr__(self) -> str:
         return self.model_dump_json(indent=4, exclude_unset=False, exclude_none=False, exclude_defaults=False)
 
@@ -69,7 +71,6 @@ class MetadataMixin(SQLModel):
     Mixin class for created_at, and updated_at fields
     """
 
-    id: int = Field(primary_key=True, nullable=False)  # All of the osu objects already have a unique id.
     created_at: datetime | None = Field(
         default=None,
         sa_type=cast(Any, DateTime(timezone=True)),
@@ -85,9 +86,9 @@ class MetadataMixin(SQLModel):
 
 # User models
 class User(Base, MetadataMixin, table=True):
-    username: str = Field(description="The username of the user", nullable=False)
-    scores: list["Score"] = Relationship(back_populates="user", cascade_delete=True)
+    username: str = Field(description="The username of the user", nullable=True)
 
+    scores: list["Score"] = Relationship(back_populates="user", cascade_delete=True)
     beatmapsets: list["Beatmapset"] = Relationship(back_populates="mapper")
 
 
@@ -106,6 +107,7 @@ class Score(Base, MetadataMixin, table=True):
         nullable=False,
     )
     set_at: datetime | None = Field(default=None, description="The date the score was set - not db related")
+
     user: "User" = Relationship(back_populates="scores")
     beatmap: "Beatmap" = Relationship(back_populates="scores")
 
@@ -126,6 +128,7 @@ class Beatmap(Base, MetadataMixin, table=True):
     ar: float = Field(description="The approach rate of the beatmap", nullable=False)
     length: int = Field(description="The length of the beatmap in seconds", nullable=False)
     version: str = Field(description='The version name of the beatmap', nullable=False)
+
     beatmapset: "Beatmapset" = Relationship(back_populates="beatmaps")
     scores: list["Score"] = Relationship(
         back_populates="beatmap", sa_relationship_kwargs={"lazy": "select"}
@@ -137,7 +140,9 @@ class Beatmapset(Base, MetadataMixin, table=True):
     ranked_date: datetime | None = Field(default=None, description="The date the beatmapset was ranked")
     title: str = Field(description="The title of the beatmapset", nullable=False)
     artist: str = Field(description="The artist of the beatmapset", nullable=False)
-    author_id: int | None = Field(description="The user (id) that created the beatmapset", nullable=True)
+    mapper_id: int | None = Field(
+        description="The mapper (user.id) that created the beatmapset", foreign_key='user.id', nullable=False
+    )
 
     beatmaps: list["Beatmap"] = Relationship(back_populates="beatmapset", cascade_delete=True)
     mapper: "User" = Relationship(back_populates="beatmapsets")
