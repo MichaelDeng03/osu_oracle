@@ -1,6 +1,6 @@
-from typing import TypeVar
+from typing import Generator, TypeVar
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from db.orm.models import Base
 
@@ -39,3 +39,19 @@ def create_or_ignore(db: Session, model: TModel) -> TModel:
     if existing:
         return existing
     return create_generic(db, model)
+
+
+def get_ids(session: Session, model: type[Base], batch_size: int = 100, start_id=0) -> Generator[int, None, None]:
+    """
+    A generator that yields IDs of the given model from the database using id-based pagination.
+    """
+    while True:
+        query = select(model.id).where(model.id > start_id).limit(batch_size)
+
+        rows = session.exec(query).all()
+
+        if not rows:
+            break
+
+        yield from rows
+        start_id = rows[-1]
