@@ -1,9 +1,10 @@
-from data_collection import ossapi_client
 from db import crud
 from db.orm import Session, models
 
+from .client import ossapi_client
 
-def get_user_and_scores(user_id: int, mode: str = 'osu', type: str = 'best'):
+
+def get_user_scores(user_id: int, mode: str = 'osu', type: str = 'best'):
     """
     Gets and saves a user's top scores
     """

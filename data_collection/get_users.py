@@ -6,9 +6,10 @@ import requests
 from bs4 import BeautifulSoup as bs
 from ossapi import Cursor
 
-from data_collection import ossapi_client
 from db import crud
 from db.orm import Session, models
+
+from .client import ossapi_client
 
 
 def get_user_ids_from_country_leaderboard(country: str):
@@ -48,4 +49,5 @@ def get_users():
         get_user_ids_from_country_leaderboard(country_code)
 
 
-get_user()
+if __name__ == "__main__":
+    get_users()
