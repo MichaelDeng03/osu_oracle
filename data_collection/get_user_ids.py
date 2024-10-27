@@ -28,7 +28,7 @@ def get_user_ids_from_country_leaderboard(country: str):
                 crud.create_or_ignore(session, user)
 
 
-def get_user_ids():
+def get_users():
     """
     Gets all user ids & usernames from osu! leaderboards
     Saves them in db.
@@ -48,4 +48,4 @@ def get_user_ids():
         get_user_ids_from_country_leaderboard(country_code)
 
 
-get_user_ids()
+get_user()
