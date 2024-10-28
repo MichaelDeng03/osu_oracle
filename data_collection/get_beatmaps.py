@@ -25,3 +25,17 @@ def get_beatmap(beatmap_id: int):
     with Session() as session:
         beatmap = models.Beatmap(**beatmap_data)
         crud.create_or_ignore(session, beatmap)
+
+
+def get_beatmapset(beatmapset_id: int):
+    beatmapset = ossapi_client.beatmapset(beatmapset_id)
+    beatmapset_data = {
+        "id": beatmapset.id,
+        "ranked_date": beatmapset.ranked_date,
+        "title": beatmapset.title,
+        "artist": beatmapset.artist,
+        "mapper_id": beatmapset.creator,
+    }
+    with Session() as session:
+        beatmapset = models.Beatmapset(**beatmapset_data)
+        crud.create_or_ignore(session, beatmapset)

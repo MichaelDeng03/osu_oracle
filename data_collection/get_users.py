@@ -49,5 +49,20 @@ def get_users():
         get_user_ids_from_country_leaderboard(country_code)
 
 
+def get_user(user_id: int):
+    """
+    Gets a user
+    """
+    user = ossapi_client.user(user_id)
+    user_data = {
+        "id": user.id,
+        "username": user.username,
+    }
+
+    with Session() as session:
+        user = models.User(**user_data)
+        crud.create_or_ignore(session, user)
+
+
 if __name__ == "__main__":
     get_users()
