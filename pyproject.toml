@@ -1,36 +1,45 @@
-[tool.poetry]
+[project]
 name = "osu-oracle"
 version = "0.1.0"
 description = ""
-authors = ["Michael Deng <michaeldeng2003@gmail.com>"]
+authors = [{ name = "Michael Deng", email = "michaeldeng2003@gmail.com" }]
+requires-python = "==3.11.9"
 readme = "README.md"
-packages = [{ include = "osu_oracle" }]
+dependencies = [
+    "ossapi==4.0.0",
+    "scikit-learn==1.5.1",
+    "gensim==4.3.3",
+    "python-dotenv==1.0.1",
+    "sqlalchemy==2.0.34",
+    "sqlmodel==0.0.22",
+    "pycountry==24.6.1",
+]
 
-[tool.poetry.dependencies]
-python = "==3.11.9"
-ossapi = "==4.0.0"
-scikit-learn = "==1.5.1"
-gensim = "==4.3.3"
-python-dotenv = "==1.0.1"
-sqlalchemy = "==2.0.34"
-sqlmodel = "==0.0.22"
-pycountry = "==24.6.1"
+[dependency-groups]
+website = ["flask==3.0.3"]
+dev = [
+    "jupyterlab==4.2.5",
+    "black==24.4.2",
+    "flake8==7.1.0",
+    "isort==5.13.2",
+    "bandit==1.7.9",
+    "pre-commit==3.7.1",
+    "mypy==1.11.2",
+    "alembic==1.13.2",
+]
 
+[tool.uv]
+default-groups = [
+    "website",
+    "dev",
+]
 
-[tool.poetry.group.website.dependencies]
-flask = "==3.0.3"
+[tool.hatch.build.targets.sdist]
+include = ["osu_oracle"]
 
-
-[tool.poetry.group.dev.dependencies]
-jupyterlab = "==4.2.5"
-black = "==24.4.2"
-flake8 = "==7.1.0"
-isort = "==5.13.2"
-bandit = "==1.7.9"
-pre-commit = "==3.7.1"
-mypy = "==1.11.2"
-alembic = "==1.13.2"
+[tool.hatch.build.targets.wheel]
+include = ["osu_oracle"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
