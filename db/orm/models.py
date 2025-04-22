@@ -11,10 +11,10 @@ from sqlmodel import Column, Field, Relationship, SQLModel
 
 # Enums
 class ModeEnum(enum.Enum):  # matches ossapi modes
-    osu = 'osu'
-    taiko = 'taiko'
-    mania = 'mania'
-    fruits = 'fruits'
+    osu = "osu"
+    taiko = "taiko"
+    mania = "mania"
+    fruits = "fruits"
 
 
 class ModsEnum(enum.IntFlag):
@@ -54,17 +54,31 @@ class ModsEnum(enum.IntFlag):
     # Compound Mods
     KeyMod = Key1 | Key2 | Key3 | Key4 | Key5 | Key6 | Key7 | Key8 | Key9 | KeyCoop
     FreeModAllowed = (
-        NoFail | Easy | Hidden | HardRock | SuddenDeath | Flashlight | FadeIn | Relax | Relax2 | SpunOut | KeyMod
+        NoFail
+        | Easy
+        | Hidden
+        | HardRock
+        | SuddenDeath
+        | Flashlight
+        | FadeIn
+        | Relax
+        | Relax2
+        | SpunOut
+        | KeyMod
     )
     ScoreIncreaseMods = Hidden | HardRock | DoubleTime | Flashlight | FadeIn
 
 
 # Base Models
 class Base(SQLModel):
-    id: int = Field(primary_key=True, nullable=False)  # All of the osu objects already have a unique id.
+    id: int = Field(
+        primary_key=True, nullable=False
+    )  # All of the osu objects already have a unique id.
 
     def __repr__(self) -> str:
-        return self.model_dump_json(indent=4, exclude_unset=False, exclude_none=False, exclude_defaults=False)
+        return self.model_dump_json(
+            indent=4, exclude_unset=False, exclude_none=False, exclude_defaults=False
+        )
 
 
 class MetadataMixin(SQLModel):
@@ -81,7 +95,9 @@ class MetadataMixin(SQLModel):
     modified_at: datetime | None = Field(
         default=None,
         sa_type=cast(Any, DateTime(timezone=True)),
-        sa_column_kwargs=cast(Mapping[str, Any], {"onupdate": func.now(), "server_default": func.now()}),
+        sa_column_kwargs=cast(
+            Mapping[str, Any], {"onupdate": func.now(), "server_default": func.now()}
+        ),
     )
 
 
@@ -95,7 +111,9 @@ class User(Base, MetadataMixin, table=True):
 
 # Score models
 class Score(Base, MetadataMixin, table=True):
-    mods: ModsEnum = Field(sa_column=Column(Integer, nullable=False), default=ModsEnum.NoMod)
+    mods: ModsEnum = Field(
+        sa_column=Column(Integer, nullable=False), default=ModsEnum.NoMod
+    )
     pp: float = Field(description="The pp of the score", nullable=False)
     beatmap_id: int = Field(
         description="The beatmap (id) this score belongs to",
@@ -107,7 +125,9 @@ class Score(Base, MetadataMixin, table=True):
         foreign_key="user.id",
         nullable=False,
     )
-    set_at: datetime | None = Field(default=None, description="The date the score was set - not db related")
+    set_at: datetime | None = Field(
+        default=None, description="The date the score was set - not db related"
+    )
 
     user: "User" = Relationship(back_populates="scores")
     beatmap: "Beatmap" = Relationship(back_populates="scores")
@@ -115,20 +135,29 @@ class Score(Base, MetadataMixin, table=True):
 
 # Beatmap models
 class Beatmap(Base, MetadataMixin, table=True):
-    mode: ModeEnum = Field(sa_column=Column(SAEnum(ModeEnum, name="mode_enum"), nullable=False), default=ModeEnum.osu)
+    mode: ModeEnum = Field(
+        sa_column=Column(SAEnum(ModeEnum, name="mode_enum"), nullable=False),
+        default=ModeEnum.osu,
+    )
 
     beatmapset_id: int = Field(
         description="The beatmapset (id) this beatmap belongs to",
         foreign_key="beatmapset.id",
         nullable=False,
     )
-    difficulty_rating: float = Field(description="The difficulty rating of the beatmap", nullable=False)
+    difficulty_rating: float = Field(
+        description="The difficulty rating of the beatmap", nullable=False
+    )
     bpm: float = Field(description="The BPM of the beatmap", nullable=False)
     cs: float = Field(description="The circle size of the beatmap", nullable=False)
-    od: float = Field(description="The overall difficulty of the beatmap", nullable=False)
+    od: float = Field(
+        description="The overall difficulty of the beatmap", nullable=False
+    )
     ar: float = Field(description="The approach rate of the beatmap", nullable=False)
-    length: int = Field(description="The length of the beatmap in seconds", nullable=False)
-    version: str = Field(description='The version name of the beatmap', nullable=False)
+    length: int = Field(
+        description="The length of the beatmap in seconds", nullable=False
+    )
+    version: str = Field(description="The version name of the beatmap", nullable=False)
 
     beatmapset: "Beatmapset" = Relationship(back_populates="beatmaps")
     scores: list["Score"] = Relationship(
@@ -138,12 +167,18 @@ class Beatmap(Base, MetadataMixin, table=True):
 
 # Beatmapset models
 class Beatmapset(Base, MetadataMixin, table=True):
-    ranked_date: datetime | None = Field(default=None, description="The date the beatmapset was ranked")
+    ranked_date: datetime | None = Field(
+        default=None, description="The date the beatmapset was ranked"
+    )
     title: str = Field(description="The title of the beatmapset", nullable=False)
     artist: str = Field(description="The artist of the beatmapset", nullable=False)
     mapper_id: int | None = Field(
-        description="The mapper (user.id) that created the beatmapset", foreign_key='user.id', nullable=False
+        description="The mapper (user.id) that created the beatmapset",
+        foreign_key="user.id",
+        nullable=False,
     )
 
-    beatmaps: list["Beatmap"] = Relationship(back_populates="beatmapset", cascade_delete=True)
+    beatmaps: list["Beatmap"] = Relationship(
+        back_populates="beatmapset", cascade_delete=True
+    )
     mapper: "User" = Relationship(back_populates="beatmapsets")

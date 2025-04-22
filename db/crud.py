@@ -41,7 +41,9 @@ def create_or_ignore(db: Session, model: TModel) -> TModel:
     return create_generic(db, model)
 
 
-def get_ids(session: Session, model: type[Base], batch_size: int = 100, start_id=0) -> Generator[int, None, None]:
+def get_ids(
+    session: Session, model: type[Base], batch_size: int = 100, start_id=0
+) -> Generator[int, None, None]:
     """
     A generator that yields IDs of the given model from the database using id-based pagination.
     """

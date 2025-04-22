@@ -20,8 +20,12 @@ def get_user_ids_from_country_leaderboard(country: str):
     # api = Ossapi(client_id, client_secret)
     lb_cursor = Cursor(page=1)
     while lb_cursor is not None:
-        print(f'{strftime("%H:%M:%S", localtime(time.time()))}: Starting {lb_cursor.page=}')
-        lb = ossapi_client.ranking(mode='osu', type='performance', country=country, cursor=lb_cursor)
+        print(
+            f"{strftime('%H:%M:%S', localtime(time.time()))}: Starting {lb_cursor.page=}"
+        )
+        lb = ossapi_client.ranking(
+            mode="osu", type="performance", country=country, cursor=lb_cursor
+        )
         lb_cursor = lb.cursor
         for user_stats in lb.ranking:
             user = models.User(id=user_stats.user.id, username=user_stats.user.username)
@@ -34,7 +38,9 @@ def get_users():
     Gets all user ids & usernames from osu! leaderboards
     Saves them in db.
     """
-    page_html = requests.get("https://osu.ppy.sh/rankings/osu/performance", timeout=3).text
+    page_html = requests.get(
+        "https://osu.ppy.sh/rankings/osu/performance", timeout=3
+    ).text
     soup = bs(page_html, "html.parser")
     script = soup.find("script", {"id": "json-country-filter"})
     json_text = script.get_text()

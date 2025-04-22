@@ -16,12 +16,16 @@ client_secret = config["osu_client_secret"]
 
 app = Flask(__name__)
 api = Ossapi(client_id, client_secret)
-conn = sqlite3.connect("../data/UserScores.db", check_same_thread=False)  # DANGER DANGER: need to lock acquire manually
+conn = sqlite3.connect(
+    "../data/UserScores.db", check_same_thread=False
+)  # DANGER DANGER: need to lock acquire manually
 lock = threading.Lock()
 
 word2vec_model_std = gensim.models.Word2Vec.load("../Models/recent_word2vec_1.model")
 
-NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(word2vec_model_std.wv.vectors)
+NN_std = NearestNeighbors(n_neighbors=200, algorithm="ball_tree").fit(
+    word2vec_model_std.wv.vectors
+)
 
 
 mod_enums_list = [
@@ -317,7 +321,11 @@ def get_user_top_scores(user_id):
             pp = getattr(score, "pp", None)
 
             created_at = getattr(score, "created_at", None)
-            created_at = datetime.strftime(created_at, "%Y-%m-%d %H:%M:%S") if created_at else None
+            created_at = (
+                datetime.strftime(created_at, "%Y-%m-%d %H:%M:%S")
+                if created_at
+                else None
+            )
 
             score = {
                 "user_id": user_id,
@@ -349,7 +357,9 @@ def get_user_top_scores(user_id):
 
 @app.route("/get_beatmap/<int:beatmap_id>")
 def get_beatmap(beatmap_id):
-    mods_enum = request.args.get("modsEnum", default=0, type=int)  # Get mods_enum from query parameters
+    mods_enum = request.args.get(
+        "modsEnum", default=0, type=int
+    )  # Get mods_enum from query parameters
 
     beatmap = api.beatmap(beatmap_id)
     beatmapset = getattr(beatmap, "_beatmapset", None)
@@ -393,7 +403,9 @@ def predict_beatmaps():
         kmeans.fit(top_scores_vec)
         cluster_centers = kmeans.cluster_centers_
     else:
-        cluster_centers = [np.mean(top_scores_vec, axis=0)]  # Use mean if too few for clustering
+        cluster_centers = [
+            np.mean(top_scores_vec, axis=0)
+        ]  # Use mean if too few for clustering
 
     # Calculate the number of results per cluster to meet the 200 total result requirement
     results_per_cluster = 250 // num_clusters

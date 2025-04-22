@@ -4,7 +4,7 @@ from db.orm import Session, models
 from .client import ossapi_client
 
 
-def get_user_scores(user_id: int, mode: str = 'osu', type: str = 'best'):
+def get_user_scores(user_id: int, mode: str = "osu", type: str = "best"):
     """
     Gets and saves a user's top scores
     """
