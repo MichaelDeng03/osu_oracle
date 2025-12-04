@@ -55,10 +55,10 @@ async def oauth2():
     endpoint = "https://osu.ppy.sh/oauth/authorize"
 
     # Parameters for the authorization URL
-    redirect_uri = "http://localhost:8000"
+    redirect_uri = "http://localhost:8000"  # TODO: Change to actual redirect URI
     response_type = "code"
     scope = "public"
-    state = "foobar"  # TODO: CSRF
+    state = "foobar"  # TODO: CSRF protection
     client_id = getenv("OSU_CLIENT_ID")
 
     auth_url = (
