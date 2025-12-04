@@ -55,7 +55,9 @@ async def oauth2():
     endpoint = "https://osu.ppy.sh/oauth/authorize"
 
     # Parameters for the authorization URL
-    redirect_uri = "http://localhost:8000"  # TODO: Change to actual redirect URI
+    redirect_uri = (
+        "http://localhost:8000/oauth2/callback"  # TODO: Change to actual redirect URI
+    )
     response_type = "code"
     scope = "public"
     state = "foobar"  # TODO: CSRF protection
@@ -71,6 +73,32 @@ async def oauth2():
     )
 
     return RedirectResponse(url=auth_url)
+
+
+@app.get("/oauth2/callback")
+async def oauth2_callback(code: str, state: str):
+    token_endpoint = "https://osu.ppy.sh/oauth/token"
+    redirect_uri = (
+        "http://localhost:8000/oauth2/callback"  # TODO: Change to actual redirect URI
+    )
+    client_id = getenv("OSU_CLIENT_ID")
+    client_secret = getenv("OSU_CLIENT_SECRET")
+
+    data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "code": code,
+        "grant_type": "authorization_code",
+        "redirect_uri": redirect_uri,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(token_endpoint, data=data)
+        response.raise_for_status()
+        token_data = response.json()
+
+    access_token = token_data.get("access_token")
+    return {"access_token": access_token}
 
 
 if __name__ == "__main__":
