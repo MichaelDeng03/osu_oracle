@@ -8,6 +8,8 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from models import Settings
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,20 +25,20 @@ file_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
-logger.info("API is starting up")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     load_dotenv()
     logger.info("Loading environment variables from .env file.")
-    OSU_CLIENT_SECRET = getenv("OSU_CLIENT_SECRET")
-    OSU_CLIENT_ID = getenv("OSU_CLIENT_ID")
-    OSU_API_ENDPOINT = "https://osu.ppy.sh/api/v2"
-    if not OSU_CLIENT_ID or not OSU_CLIENT_SECRET:
-        logger.error("Missing osu! client credentials in environment variables.")
-        raise EnvironmentError("Missing osu! client credentials.")
-    logger.info("Environment variables loaded successfully.")
+    try:
+        settings = Settings()
+        logger.info(
+            "Environment variables loaded successfully using Pydantic Settings."
+        )
+    except ValidationError as e:
+        logger.error(f"Environment variable validation error: {e}")
+        raise e
+
     yield
 
 
@@ -45,7 +47,6 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 async def main():
-    logger.info("GET /")
     return "ok"
 
 
