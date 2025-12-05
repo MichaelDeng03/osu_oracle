@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
     logger.info("Loading environment variables from .env file.")
     try:
         settings = Settings()
+        app.state.settings = settings
         logger.info(
             "Environment variables loaded successfully using Pydantic Settings."
         )
@@ -52,20 +53,17 @@ async def main():
 
 @app.get("/oauth2")
 async def oauth2():
-    # Base authorization endpoint
-    endpoint = "https://osu.ppy.sh/oauth/authorize"
+    settings: Settings = app.state.settings
+    auth_endpoint: str = "https://osu.ppy.sh/oauth/authorize"
 
-    # Parameters for the authorization URL
-    redirect_uri = (
-        "http://localhost:8000/oauth2/callback"  # TODO: Change to actual redirect URI
-    )
+    redirect_uri: str = settings.REDIRECT_URI
     response_type = "code"
     scope = "public"
     state = "foobar"  # TODO: CSRF protection
     client_id = getenv("OSU_CLIENT_ID")
 
     auth_url = (
-        f"{endpoint}"
+        f"{auth_endpoint}"
         f"?client_id={client_id}"
         f"&redirect_uri={redirect_uri}"
         f"&response_type={response_type}"
@@ -78,19 +76,15 @@ async def oauth2():
 
 @app.get("/oauth2/callback")
 async def oauth2_callback(code: str, state: str):
+    settings: Settings = app.state.settings
     token_endpoint = "https://osu.ppy.sh/oauth/token"
-    redirect_uri = (
-        "http://localhost:8000/oauth2/callback"  # TODO: Change to actual redirect URI
-    )
-    client_id = getenv("OSU_CLIENT_ID")
-    client_secret = getenv("OSU_CLIENT_SECRET")
 
     data = {
-        "client_id": client_id,
-        "client_secret": client_secret,
+        "client_id": settings.OSU_CLIENT_ID,
+        "client_secret": settings.OSU_CLIENT_SECRET.get_secret_value(),
         "code": code,
         "grant_type": "authorization_code",
-        "redirect_uri": redirect_uri,
+        "redirect_uri": settings.REDIRECT_URI,
     }
 
     async with httpx.AsyncClient() as client:
