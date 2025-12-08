@@ -48,7 +48,7 @@ app.add_middleware(
 
 @app.get("/")
 async def main():
-    return "ok"
+    return {"message": "Hello, World!"}
 
 
 @app.get("/oauth2")
