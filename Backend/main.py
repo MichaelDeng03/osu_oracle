@@ -1,5 +1,3 @@
-import logging
-import sys
 from contextlib import asynccontextmanager
 from os import getenv
 
@@ -9,6 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from logging_config import logger
 from models import Settings
 from pydantic import ValidationError
 
@@ -18,20 +17,6 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    "%(asctime)s [%(processName)s: %(process)d] [%(threadName)s: %(thread)d] [%(levelname)s] %(name)s: %(message)s"
-)
-
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setFormatter(formatter)
-file_handler = logging.FileHandler("info.log")
-file_handler.setFormatter(formatter)
-
-logger.addHandler(stream_handler)
-logger.addHandler(file_handler)
 
 
 @asynccontextmanager
