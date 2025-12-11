@@ -50,3 +50,4 @@ def get_users(ids: list[int]) -> list[UserSQLModel]:
 
 if __name__ == "__main__":
     users = get_users([28956125, 289561251])
+    print(users)
