@@ -11,9 +11,9 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect("oracle-dev.db")
-    return conn
+def get_engine():
+    engine = create_engine("sqlite:///oracle-dev.db", echo=True)
+    return engine
 
 
 if __name__ == "__main__":
