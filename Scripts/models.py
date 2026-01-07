@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 # Refer to https://osu.ppy.sh/docs/#userextended
@@ -11,6 +11,10 @@ class UserSQLModel(SQLModel, table=True):
     )
     username: str = Field(..., description="The user's username")
 
+    beatmapsets: list["BeatmapsetSQLModel"] = Relationship(back_populates="user")
+    beatmaps: list["BeatmapSQLModel"] = Relationship(back_populates="user")
+    scores: list["ScoreSQLModel"] = Relationship(back_populates="user")
+
 
 class BeatmapsetSQLModel(SQLModel, table=True):
     """
@@ -22,8 +26,8 @@ class BeatmapsetSQLModel(SQLModel, table=True):
     id: int = Field(
         primary_key=True, description="Unique identifier for the beatmapset"
     )
+
     artist: str = Field(..., description="Artist of the beatmapset")
-    # beatmaps: list[BeatmapSQLModel] Go to bottom for relationships
     bpm: float = Field(..., description="Beats per minute of the beatmapset")
     creator: str = Field(..., description="Creator of the beatmapset")
     current_user_playcount: int = Field(..., description="Play count of the beatmapset")
@@ -42,12 +46,17 @@ class BeatmapsetSQLModel(SQLModel, table=True):
     tags: str = Field(..., description="Space-separated tags for the beatmapset")
     title: str = Field(..., description="Title of the beatmapset")
     title_unicode: str = Field(..., description="Unicode title of the beatmapset")
-    user_id: int = Field(..., description="ID of the user who created the beatmapset")
     video: bool = Field(
         default=False, description="Whether the beatmapset contains a video"
     )
 
-    beatmaps: list["BeatmapSQLModel"] = []  # Relationship placeholder
+    user_id: int = Field(
+        foreign_key="usersqlmodel.id",
+        description="ID of the user who created the beatmapset",
+    )
+
+    user: UserSQLModel = Relationship(back_populates="beatmapsets")
+    beatmaps: list["BeatmapSQLModel"] = Relationship(back_populates="beatmapset")
 
 
 class BeatmapSQLModel(SQLModel, table=True):
@@ -55,9 +64,6 @@ class BeatmapSQLModel(SQLModel, table=True):
 
     accuracy: float = Field(..., description="OD value of the beatmap")
     ar: float = Field(..., description="AR value of the beatmap")
-    beatmapset_id: int = Field(
-        ..., description="ID of the beatmapset this beatmap belongs to"
-    )
     bpm: float = Field(..., description="BPM of the beatmap")
     convert: bool = Field(
         default=False,
@@ -85,16 +91,58 @@ class BeatmapSQLModel(SQLModel, table=True):
         description="Ranked status of the beatmap. https://tybug.dev/ossapi/api-reference.html#ossapi.enums.RankStatus",
     )
     rating: float = Field(..., description="Rating of the beatmap")
-    top_tag_ids: list[int] = Field(
-        default=[], description="List of top tag IDs associated with the beatmap"
-    )
+    # top_tag_ids: list[int] = Field(
+    #     default=[], description="List of top tag IDs associated with the beatmap"
+    # )
     total_length: int = Field(..., description="Total length of the beatmap in seconds")
     url: str = Field(..., description="URL to the beatmap")
-    user_id: int = Field(..., description="ID of the user who created the beatmap")
     version: str = Field(
         ..., description="Version name of the beatmap (basically the diff name)"
     )
 
+    user_id: int = Field(
+        foreign_key="usersqlmodel.id",
+        description="ID of the user who created the beatmap",
+    )
+    beatmapset_id: int = Field(
+        foreign_key="beatmapsetsqlmodel.id",
+        description="ID of the beatmapset this beatmap belongs to",
+    )
+    user: UserSQLModel = Relationship(back_populates="beatmaps")
+    beatmapset: BeatmapsetSQLModel = Relationship(back_populates="beatmaps")
+    scores: list["ScoreSQLModel"] = Relationship(back_populates="beatmap")
 
-# class ScoreSQLModel(SQLModel, table=True):
-# pass
+
+class ScoreSQLModel(SQLModel, table=True):
+    id: int = Field(primary_key=True, description="Unique identifier for the score")
+
+    accuracy: float = Field(..., description="Accuracy of the score 0-1.0")
+    created_at: str = Field(
+        ..., description="Timestamp when the score was created"
+    )  # TODO: datetime
+    max_combo: int = Field(..., description="Maximum combo achieved in the score")
+    mode: str = Field(
+        ...,
+        description="Game mode of the score. https://tybug.dev/ossapi/api-reference.html#ossapi.enums.GameMode",
+    )
+    mods: str = Field(
+        ..., description="Mods used in the score as a concatenated string"
+    )
+    passed: bool = Field(..., description="Whether the score was a pass")
+    pp: float = Field(..., description="Performance points awarded for the score")
+    score: int = Field(..., description="Total score achieved")
+    count_100: int = Field(..., description="Number of 100s hit in the score")
+    count_300: int = Field(..., description="Number of 300s hit in the score")
+    count_50: int = Field(..., description="Number of 50s hit in the score")
+    count_miss: int = Field(..., description="Number of misses in the score")
+
+    user_id: int = Field(
+        foreign_key="usersqlmodel.id",
+        description="ID of the user who achieved the score",
+    )
+    beatmap_id: int = Field(
+        foreign_key="beatmapsqlmodel.id",
+        description="ID of the beatmap",
+    )
+    user: UserSQLModel = Relationship(back_populates="scores")
+    beatmap: BeatmapSQLModel = Relationship(back_populates="scores")

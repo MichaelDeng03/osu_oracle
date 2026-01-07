@@ -12,19 +12,8 @@ def create_db_and_tables():
 
 
 def get_engine():
-    engine = create_engine("sqlite:///oracle-dev.db", echo=True)
+    engine = create_engine("sqlite:///oracle-dev.db", echo=False)
     return engine
-
-
-def put_users(users: list[UserSQLModel]) -> None:
-    """
-    Saves a list of UserSQLModel to the database.
-    """
-    engine = get_engine()
-    with Session(engine) as session:
-        for user in users:
-            session.add(user)
-        session.commit()
 
 
 if __name__ == "__main__":
