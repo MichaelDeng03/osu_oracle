@@ -1,8 +1,9 @@
 import httpx
-from db import get_engine
 from models import UserSQLModel
 from osu_auth import get_auth_token
 from sqlmodel import Session
+
+from Scripts.db_init import get_engine
 
 
 def get_user(id: int) -> UserSQLModel | None:
@@ -38,6 +39,8 @@ def get_users(ids: list[int]) -> list[UserSQLModel]:
     response = httpx.get(endpoint, params=params, headers=headers)
     response_json = response.json()
     users: list[UserSQLModel] = []
+    if not response_json.get("users"):
+        return []
     for user_json in response_json.get("users"):
         user: UserSQLModel = UserSQLModel(
             id=user_json.get("id"),
@@ -50,17 +53,5 @@ def get_users(ids: list[int]) -> list[UserSQLModel]:
     return users
 
 
-def save_users(users: list[UserSQLModel]) -> None:
-    """
-    Saves a list of UserSQLModel to the database.
-    """
-    engine = get_engine()
-    with Session(engine) as session:
-        for user in users:
-            session.add(user)
-        session.commit()
-
-
 if __name__ == "__main__":
-    users = get_users([28956125, 289561251])
-    save_users(users)
+    pass

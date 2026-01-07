@@ -16,6 +16,17 @@ def get_engine():
     return engine
 
 
+def put_users(users: list[UserSQLModel]) -> None:
+    """
+    Saves a list of UserSQLModel to the database.
+    """
+    engine = get_engine()
+    with Session(engine) as session:
+        for user in users:
+            session.add(user)
+        session.commit()
+
+
 if __name__ == "__main__":
     try:
         load_dotenv()
