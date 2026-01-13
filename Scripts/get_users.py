@@ -29,7 +29,9 @@ def get_user(id: int, httpx_client: httpx.Client) -> UserSQLModel | None:
     return user
 
 
-def get_users(ids: list[int], httpx_client: httpx.Client) -> list[UserSQLModel]:
+async def get_users(
+    ids: list[int], httpx_client: httpx.AsyncClient
+) -> list[UserSQLModel]:
     """
     Attempts to fetch multiple users from osu api and reduce them to UserSQLModel.
     Users that do not exist are skipped, therefore len(ids) >= len(returned list).
@@ -38,9 +40,9 @@ def get_users(ids: list[int], httpx_client: httpx.Client) -> list[UserSQLModel]:
     endpoint = "https://osu.ppy.sh/api/v2/users"
     params = {"ids[]": ids}
     headers = {"Authorization": "Bearer " + get_auth_token().access_token}
-    response = httpx.get(endpoint, params=params, headers=headers)
-    response_json = response.json()
     users: list[UserSQLModel] = []
+    response = await httpx_client.get(endpoint, params=params, headers=headers)
+    response_json = response.json()
     if not response_json.get("users"):
         return []
     for user_json in response_json.get("users"):
@@ -55,9 +57,14 @@ def get_users(ids: list[int], httpx_client: httpx.Client) -> list[UserSQLModel]:
     return users
 
 
-def get_user_scores(
+async def get_users_sem(sem, httpx_client, ids: list[int]) -> list[UserSQLModel]:
+    async with sem:
+        return await get_users(ids, httpx_client)
+
+
+async def get_user_scores(
     id: int,
-    httpx_client: httpx.Client,
+    httpx_client: httpx.AsyncClient,
     type: str = "best",
     mode: str = "osu",
     limit: int = 100,
@@ -81,7 +88,9 @@ def get_user_scores(
             "limit": limit,
             "offset": offset + attempted,
         }
-        response = httpx_client.get(endpoint, headers=headers, params=query_params)
+        response = await httpx_client.get(
+            endpoint, headers=headers, params=query_params
+        )
         response_json = response.json()
 
         if not response_json:

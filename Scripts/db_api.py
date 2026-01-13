@@ -1,5 +1,6 @@
 from db_init import get_engine
 from models import ScoreSQLModel, UserSQLModel
+from sqlalchemy import text
 from sqlmodel import Session
 
 
@@ -44,3 +45,33 @@ def upsert_scores(scores: list["ScoreSQLModel"]) -> None:
         for score in scores:
             session.merge(score)
         session.commit()
+
+
+def fetch_user_ids(page_size: int = 100, offset: int = 0):
+    engine = get_engine()
+    offset = offset
+    while True:
+        with Session(engine) as session:
+            statement = text(
+                "SELECT id FROM usersqlmodel ORDER BY id LIMIT :limit OFFSET :offset"
+            )
+            results = session.execute(statement, {"limit": page_size, "offset": offset})
+
+            user_ids = [row[0] for row in results.all()]
+
+            if not user_ids:
+                break
+
+            yield user_ids
+
+            offset += page_size
+
+
+def find_offset(user_id: int, page_size: int = 100) -> int:
+    engine = get_engine()
+    with Session(engine) as session:
+        statement = text("SELECT COUNT(*) FROM usersqlmodel WHERE id < :user_id")
+        result = session.execute(statement, {"user_id": user_id})
+        count = result.scalar_one()
+        offset = (count // page_size) * page_size
+        return offset
